@@ -17,7 +17,6 @@ class _InventoryScreenState extends State<InventoryScreen> {
   bool _isLoading = true; // State to manage loading indicator
   String _errorMessage = ''; // State to hold error messages
 
-
   final String _baseUrl =
       'http://192.168.0.197:8080/api/inventory'; // Assuming endpoint for all inventory items
 

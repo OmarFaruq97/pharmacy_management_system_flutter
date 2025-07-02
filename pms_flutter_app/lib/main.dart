@@ -1,4 +1,6 @@
 import 'package:flutter/material.dart';
+import 'package:pms_flutter_app/screens/add_medicine_screen.dart'; // Ensure this path is correct
+import 'package:pms_flutter_app/screens/inventory_screen.dart'; // Import the InventoryScreen
 
 void main() {
   runApp(const PmsApp());
@@ -7,15 +9,16 @@ void main() {
 class PmsApp extends StatelessWidget {
   const PmsApp({super.key});
 
-  // This widget is the root of your application.
   @override
   Widget build(BuildContext context) {
     return MaterialApp(
-      title: 'Flutter Demo',
+      title: 'Pharmacy Management System',
       theme: ThemeData(
         colorScheme: ColorScheme.fromSeed(seedColor: Colors.blueAccent),
+        useMaterial3: true, // Recommended for modern Flutter apps
       ),
       home: const MyHomePage(title: 'Pharmacy Management System'),
+      debugShowCheckedModeBanner: false, // Hides the debug banner
     );
   }
 }
@@ -36,7 +39,8 @@ class _MyHomePageState extends State<MyHomePage> {
       appBar: AppBar(
         title: Text(widget.title),
         centerTitle: true,
-        backgroundColor: Theme.of(context).colorScheme.inversePrimary,
+        backgroundColor: Theme.of(context).colorScheme.primary,
+        foregroundColor: Colors.white,
       ),
       body: Padding(
         padding: const EdgeInsets.all(16.0),
@@ -56,22 +60,21 @@ class _MyHomePageState extends State<MyHomePage> {
                 style: TextStyle(
                   fontSize: 20,
                   fontWeight: FontWeight.bold,
-                  color: Colors.blueAccent,
+                  color: Colors.black87,
                 ),
               ),
               const SizedBox(height: 40),
-
-              // Buttons Grid
               Wrap(
                 spacing: 20,
                 runSpacing: 20,
                 alignment: WrapAlignment.center,
                 children: [
-                  _buildHomeButton(Icons.inventory, 'Inventory'),
-                  _buildHomeButton(Icons.receipt_long, 'Invoices'),
-                  _buildHomeButton(Icons.bar_chart, 'Reports'),
-                  _buildHomeButton(Icons.person, 'Users'),
-                  _buildHomeButton(Icons.warning_amber, 'Low-Stocks')
+                  _buildHomeButton(context, Icons.inventory, 'Inventory'),
+                  _buildHomeButton(context, Icons.add_box, 'Add-Medicine'),
+                  _buildHomeButton(context, Icons.receipt_long, 'Invoices'),
+                  _buildHomeButton(context, Icons.bar_chart, 'Reports'),
+                  _buildHomeButton(context, Icons.person, 'Users'),
+                  _buildHomeButton(context, Icons.warning_amber, 'Low-Stocks'),
                 ],
               ),
             ],
@@ -81,13 +84,51 @@ class _MyHomePageState extends State<MyHomePage> {
     );
   }
 
-  Widget _buildHomeButton(IconData icon, String label) {
+  Widget _buildHomeButton(BuildContext context, IconData icon, String label) {
     return SizedBox(
       width: 120,
       height: 120,
       child: ElevatedButton(
         onPressed: () {
-          // Navigate to respective screen
+          switch (label) {
+            case 'Inventory':
+            // Navigate to InventoryScreen
+              Navigator.push(
+                context,
+                MaterialPageRoute(
+                  builder: (context) => const InventoryScreen(),
+                ),
+              );
+              break;
+            case 'Add-Medicine':
+            // Navigate to AddMedicineScreen
+              Navigator.push(
+                context,
+                MaterialPageRoute(
+                  builder: (context) => const AddMedicineScreen(),
+                ),
+              );
+              break;
+            case 'Invoices':
+              ScaffoldMessenger.of(context).showSnackBar(
+                  const SnackBar(content: Text('Coming Soon: Invoices')));
+              break;
+            case 'Reports':
+              ScaffoldMessenger.of(context).showSnackBar(
+                  const SnackBar(content: Text('Coming Soon: Reports')));
+              break;
+            case 'Users':
+              ScaffoldMessenger.of(context).showSnackBar(
+                  const SnackBar(content: Text('Coming Soon: Users')));
+              break;
+            case 'Low-Stocks':
+              ScaffoldMessenger.of(context).showSnackBar(
+                  const SnackBar(content: Text('Coming Soon: Low Stocks')));
+              break;
+            default:
+              ScaffoldMessenger.of(context).showSnackBar(
+                  SnackBar(content: Text('Unknown Action for: $label')));
+          }
         },
         style: ElevatedButton.styleFrom(
           backgroundColor: Colors.blueAccent,
@@ -95,6 +136,7 @@ class _MyHomePageState extends State<MyHomePage> {
             borderRadius: BorderRadius.circular(16),
           ),
           padding: const EdgeInsets.all(16),
+          foregroundColor: Colors.white,
         ),
         child: Column(
           mainAxisAlignment: MainAxisAlignment.center,

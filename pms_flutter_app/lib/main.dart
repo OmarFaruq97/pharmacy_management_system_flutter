@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:pms_flutter_app/screens/add_medicine_screen.dart'; // Ensure this path is correct
+import 'package:pms_flutter_app/screens/create_invoice.dart';
 import 'package:pms_flutter_app/screens/inventory_screen.dart'; // Import the InventoryScreen
 
 void main() {
@@ -71,7 +72,11 @@ class _MyHomePageState extends State<MyHomePage> {
                 children: [
                   _buildHomeButton(context, Icons.inventory, 'Inventory'),
                   _buildHomeButton(context, Icons.add_box, 'Add-Medicine'),
-                  _buildHomeButton(context, Icons.receipt_long, 'Invoices'),
+                  _buildHomeButton(
+                    context,
+                    Icons.receipt_long,
+                    'Create-Invoices',
+                  ),
                   _buildHomeButton(context, Icons.bar_chart, 'Reports'),
                   _buildHomeButton(context, Icons.person, 'Users'),
                   _buildHomeButton(context, Icons.warning_amber, 'Low-Stocks'),
@@ -92,7 +97,7 @@ class _MyHomePageState extends State<MyHomePage> {
         onPressed: () {
           switch (label) {
             case 'Inventory':
-            // Navigate to InventoryScreen
+              // Navigate to InventoryScreen
               Navigator.push(
                 context,
                 MaterialPageRoute(
@@ -101,7 +106,7 @@ class _MyHomePageState extends State<MyHomePage> {
               );
               break;
             case 'Add-Medicine':
-            // Navigate to AddMedicineScreen
+              // Navigate to AddMedicineScreen
               Navigator.push(
                 context,
                 MaterialPageRoute(
@@ -109,25 +114,33 @@ class _MyHomePageState extends State<MyHomePage> {
                 ),
               );
               break;
-            case 'Invoices':
-              ScaffoldMessenger.of(context).showSnackBar(
-                  const SnackBar(content: Text('Coming Soon: Invoices')));
+            case 'Create-Invoices': // Updated case for invoice navigation
+              Navigator.push(
+                context,
+                MaterialPageRoute(
+                  builder: (context) => const CreateInvoiceScreen(),
+                ),
+              );
               break;
             case 'Reports':
               ScaffoldMessenger.of(context).showSnackBar(
-                  const SnackBar(content: Text('Coming Soon: Reports')));
+                const SnackBar(content: Text('Coming Soon: Reports')),
+              );
               break;
             case 'Users':
               ScaffoldMessenger.of(context).showSnackBar(
-                  const SnackBar(content: Text('Coming Soon: Users')));
+                const SnackBar(content: Text('Coming Soon: Users')),
+              );
               break;
             case 'Low-Stocks':
               ScaffoldMessenger.of(context).showSnackBar(
-                  const SnackBar(content: Text('Coming Soon: Low Stocks')));
+                const SnackBar(content: Text('Coming Soon: Low Stocks')),
+              );
               break;
             default:
               ScaffoldMessenger.of(context).showSnackBar(
-                  SnackBar(content: Text('Unknown Action for: $label')));
+                SnackBar(content: Text('Unknown Action for: $label')),
+              );
           }
         },
         style: ElevatedButton.styleFrom(

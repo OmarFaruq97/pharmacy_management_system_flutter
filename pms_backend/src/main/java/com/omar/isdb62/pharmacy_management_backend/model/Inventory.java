@@ -11,7 +11,7 @@ import java.time.LocalDate;
 @AllArgsConstructor
 @NoArgsConstructor
 @Entity
-@Table(name= "pms_inventory")
+@Table(name= "flutter_inventory")
 public class Inventory {
 
     @Id

@@ -1,5 +1,9 @@
+// create_invoice.dart
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
+import 'package:http/http.dart' as http;
+import 'dart:convert';
+import '../model/inventory.dart';
 
 class CreateInvoiceScreen extends StatefulWidget {
   const CreateInvoiceScreen({super.key});
@@ -9,36 +13,67 @@ class CreateInvoiceScreen extends StatefulWidget {
 }
 
 class _CreateInvoiceScreenState extends State<CreateInvoiceScreen> {
-  // Controllers for text input fields
-
   final TextEditingController _customerNameController = TextEditingController();
-  final TextEditingController _contactNumberController =
-      TextEditingController();
+  final TextEditingController _contactNumberController = TextEditingController();
   final TextEditingController _itemNameController = TextEditingController();
   final TextEditingController _categoryController = TextEditingController();
   final TextEditingController _quantityController = TextEditingController();
   final TextEditingController _unitPriceController = TextEditingController();
   final TextEditingController _discountController = TextEditingController();
 
-  // State variables for calculated values
   double _amount = 0.0;
   double _subTotal = 0.0;
   double _discountAmount = 0.0;
   double _netPayable = 0.0;
 
+  List<Inventory> _inventoryList = [];
+  Inventory? _selectedInventory;
+  bool _isLoadingInventory = true;
+
   @override
   void initState() {
     super.initState();
-    // Add listeners to text controllers to recalculate totals on change
+    _fetchInventory();
     _quantityController.addListener(_calculateTotals);
     _unitPriceController.addListener(_calculateTotals);
     _discountController.addListener(_calculateTotals);
   }
 
+  Future<void> _fetchInventory() async {
+    try {
+      final response = await http.get(Uri.parse('http://192.168.0.197:8080/api/inventory/all'));
+      if (response.statusCode == 200) {
+        final List<dynamic> data = jsonDecode(response.body);
+        setState(() {
+          _inventoryList = data.map((json) => Inventory.fromJson(json)).toList();
+          _isLoadingInventory = false;
+        });
+      } else {
+        setState(() {
+          _isLoadingInventory = false;
+        });
+      }
+    } catch (e) {
+      setState(() {
+        _isLoadingInventory = false;
+      });
+    }
+  }
+
+  void _calculateTotals() {
+    setState(() {
+      final int quantity = int.tryParse(_quantityController.text) ?? 0;
+      final double unitPrice = double.tryParse(_unitPriceController.text) ?? 0.0;
+      final double discount = double.tryParse(_discountController.text) ?? 0.0;
+      _amount = quantity * unitPrice;
+      _subTotal = _amount;
+      _discountAmount = _amount * (discount / 100);
+      _netPayable = _amount - _discountAmount;
+    });
+  }
+
   @override
   void dispose() {
-    // Dispose controllers to free up resources
-
     _customerNameController.dispose();
     _contactNumberController.dispose();
     _itemNameController.dispose();
@@ -47,28 +82,6 @@ class _CreateInvoiceScreenState extends State<CreateInvoiceScreen> {
     _unitPriceController.dispose();
     _discountController.dispose();
     super.dispose();
-  }
-
-  // Function to calculate amount, sub-total, discount amount, and net payable
-  void _calculateTotals() {
-    setState(() {
-      final int quantity = int.tryParse(_quantityController.text) ?? 0;
-      final double unitPrice =
-          double.tryParse(_unitPriceController.text) ?? 0.0;
-      final double discount = double.tryParse(_discountController.text) ?? 0.0;
-
-      // Calculate amount (price before discount for this item)
-      _amount = quantity * unitPrice;
-
-      // For a single item invoice, subTotal is the same as amount
-      _subTotal = _amount;
-
-      // Calculate discount amount
-      _discountAmount = _amount * (discount / 100);
-
-      // Calculate net payable
-      _netPayable = _amount - _discountAmount;
-    });
   }
 
   @override
@@ -85,88 +98,48 @@ class _CreateInvoiceScreenState extends State<CreateInvoiceScreen> {
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
-            // Invoice Details Section
-            Text(
-              'Invoice Details',
-              style: Theme.of(context).textTheme.headlineSmall?.copyWith(
-                fontWeight: FontWeight.bold,
-                color: Theme.of(context).colorScheme.primary,
-              ),
-            ),
+            Text('Invoice Details', style: Theme.of(context).textTheme.headlineSmall?.copyWith(fontWeight: FontWeight.bold, color: Theme.of(context).colorScheme.primary),),
             const SizedBox(height: 15),
-
-            _buildTextField(
-              controller: _customerNameController,
-              labelText: 'Customer Name',
-              hintText: 'e.g., John Doe',
-              keyboardType: TextInputType.text,
-            ),
-            _buildTextField(
-              controller: _contactNumberController,
-              labelText: 'Contact Number',
-              hintText: 'e.g., +1234567890',
-              keyboardType: TextInputType.phone,
-            ),
+            _buildTextField(controller: _customerNameController, labelText: 'Customer Name'),
+            _buildTextField(controller: _contactNumberController, labelText: 'Contact Number', keyboardType: TextInputType.phone),
             const SizedBox(height: 30),
 
-            // Item Details Section
-            Text(
-              'Item Details',
-              style: Theme.of(context).textTheme.headlineSmall?.copyWith(
-                fontWeight: FontWeight.bold,
-                color: Theme.of(context).colorScheme.primary,
-              ),
-            ),
+            Text('Item Details', style: Theme.of(context).textTheme.headlineSmall?.copyWith(fontWeight: FontWeight.bold, color: Theme.of(context).colorScheme.primary),),
             const SizedBox(height: 15),
-            _buildTextField(
-              controller: _itemNameController,
-              labelText: 'Item Name',
 
-              keyboardType: TextInputType.text,
+            _isLoadingInventory
+                ? const CircularProgressIndicator()
+                : DropdownButtonFormField<Inventory>(
+              value: _selectedInventory,
+              items: _inventoryList.map((inv) {
+                return DropdownMenuItem(
+                  value: inv,
+                  child: Text('${inv.itemName} (${inv.category})'),
+                );
+              }).toList(),
+              onChanged: (Inventory? newValue) {
+                setState(() {
+                  _selectedInventory = newValue;
+                  _itemNameController.text = newValue?.itemName ?? '';
+                  _categoryController.text = newValue?.category ?? '';
+                  _unitPriceController.text = newValue?.sellPrice.toStringAsFixed(2) ?? '';
+                  _calculateTotals();
+                });
+              },
+              decoration: InputDecoration(
+                labelText: 'Select Medicine',
+                border: OutlineInputBorder(borderRadius: BorderRadius.circular(10)),
+              ),
             ),
-            _buildTextField(
-              controller: _categoryController,
-              labelText: 'Category',
-              keyboardType: TextInputType.text,
-            ),
-            _buildTextField(
-              controller: _quantityController,
-              labelText: 'Quantity',
-              keyboardType: TextInputType.number,
-              inputFormatters: [FilteringTextInputFormatter.digitsOnly],
-            ),
-            _buildTextField(
-              controller: _unitPriceController,
-              labelText: 'Unit Price',
 
-              keyboardType: const TextInputType.numberWithOptions(
-                decimal: true,
-              ),
-              inputFormatters: [
-                FilteringTextInputFormatter.allow(RegExp(r'^\d+\.?\d{0,2}')),
-              ],
-            ),
-            _buildTextField(
-              controller: _discountController,
-              labelText: 'Discount (%)',
-              hintText: 'e.g., 5 (for 5%)',
-              keyboardType: const TextInputType.numberWithOptions(
-                decimal: true,
-              ),
-              inputFormatters: [
-                FilteringTextInputFormatter.allow(RegExp(r'^\d+\.?\d{0,2}')),
-              ],
-            ),
+            const SizedBox(height: 10),
+            _buildTextField(controller: _categoryController, labelText: 'Category'),
+            _buildTextField(controller: _quantityController, labelText: 'Quantity', keyboardType: TextInputType.number, inputFormatters: [FilteringTextInputFormatter.digitsOnly]),
+            _buildTextField(controller: _unitPriceController, labelText: 'Unit Price', keyboardType: const TextInputType.numberWithOptions(decimal: true), inputFormatters: [FilteringTextInputFormatter.allow(RegExp(r'^\d+\.?\d{0,2}'))]),
+            _buildTextField(controller: _discountController, labelText: 'Discount (%)', hintText: 'e.g., 5', keyboardType: const TextInputType.numberWithOptions(decimal: true), inputFormatters: [FilteringTextInputFormatter.allow(RegExp(r'^\d+\.?\d{0,2}'))]),
             const SizedBox(height: 30),
 
-            // Calculated Totals Section
-            Text(
-              'Summary',
-              style: Theme.of(context).textTheme.headlineSmall?.copyWith(
-                fontWeight: FontWeight.bold,
-                color: Theme.of(context).colorScheme.primary,
-              ),
-            ),
+            Text('Summary', style: Theme.of(context).textTheme.headlineSmall?.copyWith(fontWeight: FontWeight.bold, color: Theme.of(context).colorScheme.primary),),
             const SizedBox(height: 15),
             _buildSummaryRow('Amount:', _amount),
             _buildSummaryRow('Sub Total:', _subTotal),
@@ -174,11 +147,9 @@ class _CreateInvoiceScreenState extends State<CreateInvoiceScreen> {
             _buildSummaryRow('Net Payable:', _netPayable, isBold: true),
             const SizedBox(height: 30),
 
-            // Create Invoice Button
             Center(
               child: ElevatedButton.icon(
                 onPressed: () {
-                  // Basic validation
                   ScaffoldMessenger.of(context).showSnackBar(
                     const SnackBar(
                       content: Text('Please fill in all required fields.'),
@@ -192,13 +163,8 @@ class _CreateInvoiceScreenState extends State<CreateInvoiceScreen> {
                 style: ElevatedButton.styleFrom(
                   backgroundColor: Theme.of(context).colorScheme.secondary,
                   foregroundColor: Colors.white,
-                  padding: const EdgeInsets.symmetric(
-                    horizontal: 40,
-                    vertical: 15,
-                  ),
-                  shape: RoundedRectangleBorder(
-                    borderRadius: BorderRadius.circular(12),
-                  ),
+                  padding: const EdgeInsets.symmetric(horizontal: 40, vertical: 15),
+                  shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
                   textStyle: const TextStyle(fontSize: 18),
                 ),
               ),
@@ -209,14 +175,7 @@ class _CreateInvoiceScreenState extends State<CreateInvoiceScreen> {
     );
   }
 
-  // Helper widget to build text input fields
-  Widget _buildTextField({
-    required TextEditingController controller,
-    required String labelText,
-    String? hintText,
-    TextInputType keyboardType = TextInputType.text,
-    List<TextInputFormatter>? inputFormatters,
-  }) {
+  Widget _buildTextField({required TextEditingController controller, required String labelText, String? hintText, TextInputType keyboardType = TextInputType.text, List<TextInputFormatter>? inputFormatters}) {
     return Padding(
       padding: const EdgeInsets.symmetric(vertical: 8.0),
       child: TextFormField(
@@ -227,17 +186,6 @@ class _CreateInvoiceScreenState extends State<CreateInvoiceScreen> {
           labelText: labelText,
           hintText: hintText,
           border: OutlineInputBorder(borderRadius: BorderRadius.circular(10)),
-          focusedBorder: OutlineInputBorder(
-            borderRadius: BorderRadius.circular(10),
-            borderSide: BorderSide(
-              color: Theme.of(context).colorScheme.primary,
-              width: 2,
-            ),
-          ),
-          enabledBorder: OutlineInputBorder(
-            borderRadius: BorderRadius.circular(10),
-            borderSide: BorderSide(color: Colors.grey.shade400, width: 1),
-          ),
           filled: true,
           fillColor: Colors.grey[50],
         ),
@@ -245,33 +193,14 @@ class _CreateInvoiceScreenState extends State<CreateInvoiceScreen> {
     );
   }
 
-  // Helper widget to display summary rows
   Widget _buildSummaryRow(String label, double value, {bool isBold = false}) {
     return Padding(
       padding: const EdgeInsets.symmetric(vertical: 4.0),
       child: Row(
         mainAxisAlignment: MainAxisAlignment.spaceBetween,
         children: [
-          Text(
-            label,
-            style: TextStyle(
-              fontSize: 16,
-              fontWeight: isBold ? FontWeight.bold : FontWeight.normal,
-              color: isBold
-                  ? Theme.of(context).colorScheme.primary
-                  : Colors.black87,
-            ),
-          ),
-          Text(
-            value.toStringAsFixed(2), // Format to 2 decimal places
-            style: TextStyle(
-              fontSize: 16,
-              fontWeight: isBold ? FontWeight.bold : FontWeight.normal,
-              color: isBold
-                  ? Theme.of(context).colorScheme.primary
-                  : Colors.black87,
-            ),
-          ),
+          Text(label, style: TextStyle(fontSize: 16, fontWeight: isBold ? FontWeight.bold : FontWeight.normal, color: isBold ? Theme.of(context).colorScheme.primary : Colors.black87)),
+          Text(value.toStringAsFixed(2), style: TextStyle(fontSize: 16, fontWeight: isBold ? FontWeight.bold : FontWeight.normal, color: isBold ? Theme.of(context).colorScheme.primary : Colors.black87)),
         ],
       ),
     );

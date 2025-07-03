@@ -130,10 +130,10 @@ class _InventoryScreenState extends State<InventoryScreen> {
                         Text('Generic: ${medicine.generic}'),
                         Text('Quantity: ${medicine.quantity}'),
                         Text(
-                          'Unit Price: \$${medicine.unitPrice.toStringAsFixed(2)}',
+                          'Unit Price: ${medicine.unitPrice.toStringAsFixed(2)}',
                         ),
                         Text(
-                          'Sell Price: \$${medicine.sellPrice.toStringAsFixed(2)}',
+                          'Sell Price: ${medicine.sellPrice.toStringAsFixed(2)}',
                         ),
                         if (medicine.receivedDate != null)
                           Text('Received: ${medicine.receivedDate}'),
@@ -158,8 +158,8 @@ class _InventoryScreenState extends State<InventoryScreen> {
         },
         backgroundColor: Colors.blueAccent,
         foregroundColor: Colors.white,
-        child: const Icon(Icons.add),
         tooltip: 'Add New Medicine',
+        child: const Icon(Icons.add),
       ),
     );
   }

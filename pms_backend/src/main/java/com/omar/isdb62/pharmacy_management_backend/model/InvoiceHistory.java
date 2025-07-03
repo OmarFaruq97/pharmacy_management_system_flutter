@@ -10,7 +10,7 @@ import java.time.LocalDate;
 @AllArgsConstructor
 @NoArgsConstructor
 @Entity
-@Table(name = "pms_invoice_history")
+@Table(name = "flutter_invoice_history")
 public class InvoiceHistory {
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)

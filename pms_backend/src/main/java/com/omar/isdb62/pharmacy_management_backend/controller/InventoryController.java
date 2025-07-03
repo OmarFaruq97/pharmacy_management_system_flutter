@@ -70,6 +70,4 @@ public class InventoryController {
     public List<Inventory> getTodayReceivedMedicines() {
         return inventoryRepository.findByReceivedDate(LocalDate.now());
     }
-
-
 }

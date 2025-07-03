@@ -2,7 +2,6 @@ import 'package:flutter/material.dart';
 import 'package:http/http.dart' as http;
 import 'dart:convert';
 import 'package:pms_flutter_app/screens/add_medicine_screen.dart';
-
 import '../model/inventory.dart';
 
 class InventoryScreen extends StatefulWidget {
@@ -13,35 +12,27 @@ class InventoryScreen extends StatefulWidget {
 }
 
 class _InventoryScreenState extends State<InventoryScreen> {
-  List<Inventory> _medicines = []; // List to hold fetched medicines
-  bool _isLoading = true; // State to manage loading indicator
-  String _errorMessage = ''; // State to hold error messages
+  List<Inventory> _medicines = [];
+  bool _isLoading = true;
+  String _errorMessage = '';
 
-  final String _baseUrl =
-      'http://192.168.0.197:8080/api/inventory'; // Assuming endpoint for all inventory items
+  final String _baseUrl = 'http://192.168.0.197:8080/api/inventory';
 
   @override
   void initState() {
     super.initState();
-    _fetchMedicines(); // Fetch medicines when the screen initializes
+    _fetchMedicines();
   }
 
-  // Method to fetch medicines from the Spring Boot backend
   Future<void> _fetchMedicines() async {
     setState(() {
-      _isLoading = true; // Show loading indicator
-      _errorMessage = ''; // Clear previous errors
+      _isLoading = true;
+      _errorMessage = '';
     });
 
     try {
-      final response = await http.get(
-        Uri.parse('$_baseUrl/all'),
-      ); // Calling the /api/inventory/all endpoint
-      // You might need to add JWT token if your API is secured:
-      // headers: {'Authorization': 'Bearer YOUR_JWT_TOKEN'}
-
+      final response = await http.get(Uri.parse('$_baseUrl/all'));
       if (response.statusCode == 200) {
-        // If the server returns a 200 OK response, parse the JSON.
         List<dynamic> jsonList = jsonDecode(response.body);
         setState(() {
           _medicines = jsonList
@@ -50,23 +41,103 @@ class _InventoryScreenState extends State<InventoryScreen> {
           _isLoading = false;
         });
       } else {
-        // If the server did not return a 200 OK response,
-        // throw an exception or set an error message.
         setState(() {
           _errorMessage = 'Failed to load medicines: ${response.statusCode}';
           _isLoading = false;
         });
-        print('Failed to load medicines. Status code: ${response.statusCode}');
-        print('Response body: ${response.body}');
       }
     } catch (e) {
-      // Catch any network errors or other exceptions
       setState(() {
         _errorMessage = 'Error: $e';
         _isLoading = false;
       });
-      print('Error fetching medicines: $e');
     }
+  }
+
+  Future<void> _deleteMedicine(String name, String category) async {
+    final response = await http.delete(
+      Uri.parse(
+        '$_baseUrl/delete-by-name-and-category?name=$name&category=$category',
+      ),
+    );
+
+    if (response.statusCode == 200) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(
+          content: Text('Medicine deleted successfully'),
+          backgroundColor: Colors.green,
+        ),
+      );
+      _fetchMedicines();
+    } else {
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(
+          content: Text('Delete failed: ${response.body}'),
+          backgroundColor: Colors.red,
+        ),
+      );
+    }
+  }
+
+  void _showUpdateDialog(Inventory medicine) {
+    final TextEditingController priceController = TextEditingController(
+      text: medicine.sellPrice.toString(),
+    );
+
+    showDialog(
+      context: context,
+      builder: (context) => AlertDialog(
+        title: const Text('Update Sell Price'),
+        content: TextField(
+          controller: priceController,
+          keyboardType: TextInputType.numberWithOptions(decimal: true),
+          decoration: const InputDecoration(labelText: 'New Sell Price'),
+        ),
+        actions: [
+          TextButton(
+            onPressed: () => Navigator.pop(context),
+            child: const Text('Cancel'),
+          ),
+          ElevatedButton(
+            onPressed: () async {
+              final newPrice = double.tryParse(priceController.text);
+              if (newPrice != null) {
+                final response = await http.put(
+                  Uri.parse(
+                    '$_baseUrl/update-by-name-and-category?name=${medicine.itemName}&category=${medicine.category}',
+                  ),
+                  headers: {'Content-Type': 'application/json'},
+                  body: jsonEncode({
+                    'itemName': medicine.itemName,
+                    'category': medicine.category,
+                    'sellPrice': newPrice,
+                  }),
+                );
+
+                if (response.statusCode == 200) {
+                  ScaffoldMessenger.of(context).showSnackBar(
+                    const SnackBar(
+                      content: Text('Updated successfully'),
+                      backgroundColor: Colors.green,
+                    ),
+                  );
+                  Navigator.pop(context);
+                  _fetchMedicines();
+                } else {
+                  ScaffoldMessenger.of(context).showSnackBar(
+                    SnackBar(
+                      content: Text('Update failed: ${response.body}'),
+                      backgroundColor: Colors.red,
+                    ),
+                  );
+                }
+              }
+            },
+            child: const Text('Update'),
+          ),
+        ],
+      ),
+    );
   }
 
   @override
@@ -79,9 +150,7 @@ class _InventoryScreenState extends State<InventoryScreen> {
         foregroundColor: Colors.white,
       ),
       body: _isLoading
-          ? const Center(
-              child: CircularProgressIndicator(),
-            ) // Show loading spinner
+          ? const Center(child: CircularProgressIndicator())
           : _errorMessage.isNotEmpty
           ? Center(
               child: Column(
@@ -90,16 +159,14 @@ class _InventoryScreenState extends State<InventoryScreen> {
                   Text(_errorMessage),
                   const SizedBox(height: 10),
                   ElevatedButton(
-                    onPressed: _fetchMedicines, // Retry button
+                    onPressed: _fetchMedicines,
                     child: const Text('Retry'),
                   ),
                 ],
               ),
             )
           : _medicines.isEmpty
-          ? const Center(
-              child: Text('No medicines found in inventory.'),
-            ) // No data message
+          ? const Center(child: Text('No medicines found in inventory.'))
           : ListView.builder(
               padding: const EdgeInsets.all(8.0),
               itemCount: _medicines.length,
@@ -137,7 +204,29 @@ class _InventoryScreenState extends State<InventoryScreen> {
                         ),
                         if (medicine.receivedDate != null)
                           Text('Received: ${medicine.receivedDate}'),
-                        // Add more details as needed
+                        const SizedBox(height: 12),
+                        Row(
+                          mainAxisAlignment: MainAxisAlignment.end,
+                          children: [
+                            IconButton(
+                              icon: const Icon(
+                                Icons.edit_attributes,
+                                color: Colors.orange,
+                              ),
+                              onPressed: () => _showUpdateDialog(medicine),
+                            ),
+                            IconButton(
+                              icon: const Icon(
+                                Icons.delete_forever_outlined,
+                                color: Colors.red,
+                              ),
+                              onPressed: () => _deleteMedicine(
+                                medicine.itemName,
+                                medicine.category,
+                              ),
+                            ),
+                          ],
+                        ),
                       ],
                     ),
                   ),
@@ -146,14 +235,12 @@ class _InventoryScreenState extends State<InventoryScreen> {
             ),
       floatingActionButton: FloatingActionButton(
         onPressed: () async {
-          // Navigate to AddMedicineScreen and refresh inventory when it's popped
           final result = await Navigator.push(
             context,
             MaterialPageRoute(builder: (context) => const AddMedicineScreen()),
           );
           if (result == true) {
-            // Assuming AddMedicineScreen returns true on successful add
-            _fetchMedicines(); // Refresh the list
+            _fetchMedicines();
           }
         },
         backgroundColor: Colors.blueAccent,

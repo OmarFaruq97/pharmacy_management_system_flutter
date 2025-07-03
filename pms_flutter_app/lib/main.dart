@@ -1,7 +1,8 @@
 import 'package:flutter/material.dart';
 import 'package:pms_flutter_app/screens/add_medicine_screen.dart'; // Ensure this path is correct
 import 'package:pms_flutter_app/screens/create_invoice.dart';
-import 'package:pms_flutter_app/screens/inventory_screen.dart'; // Import the InventoryScreen
+import 'package:pms_flutter_app/screens/inventory_screen.dart';
+import 'package:pms_flutter_app/screens/invoice_history_screen.dart'; // Import the InventoryScreen
 
 void main() {
   runApp(const PmsApp());
@@ -77,7 +78,7 @@ class _MyHomePageState extends State<MyHomePage> {
                     Icons.receipt_long,
                     'Create-Invoices',
                   ),
-                  _buildHomeButton(context, Icons.bar_chart, 'Reports'),
+                  _buildHomeButton(context, Icons.history, 'Invoice-History'),
                   _buildHomeButton(context, Icons.person, 'Users'),
                   _buildHomeButton(context, Icons.warning_amber, 'Low-Stocks'),
                 ],
@@ -122,9 +123,12 @@ class _MyHomePageState extends State<MyHomePage> {
                 ),
               );
               break;
-            case 'Reports':
-              ScaffoldMessenger.of(context).showSnackBar(
-                const SnackBar(content: Text('Coming Soon: Reports')),
+            case 'Invoice-History':
+              Navigator.push(
+                context,
+                MaterialPageRoute(
+                    builder: (context) => const InvoiceHistoryScreen()
+                ),
               );
               break;
             case 'Users':

@@ -43,7 +43,8 @@ class _CreateInvoiceScreenState extends State<CreateInvoiceScreen> {
   Future<void> _fetchInventory() async {
     try {
       final response = await http.get(
-        Uri.parse('http://192.168.0.197:8080/api/inventory/all'),
+        // Uri.parse('http://192.168.0.197:8080/api/inventory/all'),
+        Uri.parse('http://192.168.0.186:8080/api/inventory/all'),
       );
       if (response.statusCode == 200) {
         final List<dynamic> data = jsonDecode(response.body);
@@ -93,6 +94,7 @@ class _CreateInvoiceScreenState extends State<CreateInvoiceScreen> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
+      backgroundColor: Colors.teal,
       appBar: AppBar(
         title: const Text('Create New Invoice'),
         centerTitle: true,
@@ -102,7 +104,7 @@ class _CreateInvoiceScreenState extends State<CreateInvoiceScreen> {
       body: SingleChildScrollView(
         padding: const EdgeInsets.all(16.0),
         child: Column(
-          crossAxisAlignment: CrossAxisAlignment.start,
+          crossAxisAlignment: CrossAxisAlignment.center,
           children: [
             Text(
               'Invoice Details',

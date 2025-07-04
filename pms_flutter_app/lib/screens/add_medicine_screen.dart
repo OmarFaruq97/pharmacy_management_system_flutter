@@ -49,7 +49,8 @@ class _AddMedicineScreenState extends State<AddMedicineScreen> {
       };
 
       // Replace with your backend URL
-      const String apiUrl = "http://192.168.0.197:8080/api/inventory/receive";
+      // const String apiUrl = "http://192.168.0.197:8080/api/inventory/receive";
+      const String apiUrl = "http://192.168.0.186:8080/api/inventory/receive";
 
       try {
         final response = await http.post(

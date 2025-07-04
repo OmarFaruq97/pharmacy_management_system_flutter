@@ -16,7 +16,8 @@ class _InventoryScreenState extends State<InventoryScreen> {
   bool _isLoading = true;
   String _errorMessage = '';
 
-  final String _baseUrl = 'http://192.168.0.197:8080/api/inventory';
+  // final String _baseUrl = 'http://192.168.0.197:8080/api/inventory';
+  final String _baseUrl = 'http://192.168.0.186:8080/api/inventory';
 
   @override
   void initState() {

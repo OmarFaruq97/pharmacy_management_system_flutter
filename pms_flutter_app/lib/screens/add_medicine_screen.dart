@@ -12,6 +12,7 @@ class AddMedicineScreen extends StatefulWidget {
 class _AddMedicineScreenState extends State<AddMedicineScreen> {
   final _formKey = GlobalKey<FormState>();
 
+  // Controllers for all form fields
   final TextEditingController _companyNameController = TextEditingController();
   final TextEditingController _itemNameController = TextEditingController();
   final TextEditingController _categoryController = TextEditingController();
@@ -19,7 +20,7 @@ class _AddMedicineScreenState extends State<AddMedicineScreen> {
   final TextEditingController _quantityController = TextEditingController();
   final TextEditingController _unitPriceController = TextEditingController();
   final TextEditingController _purchaseDiscountController =
-      TextEditingController();
+      TextEditingController(); // Now optional
   final TextEditingController _sellPriceController = TextEditingController();
 
   DateTime _receivedDate = DateTime.now();
@@ -28,8 +29,12 @@ class _AddMedicineScreenState extends State<AddMedicineScreen> {
     if (_formKey.currentState!.validate()) {
       final int quantity = int.parse(_quantityController.text);
       final double unitPrice = double.parse(_unitPriceController.text);
-      final double discount =
-          double.tryParse(_purchaseDiscountController.text) ?? 0.0;
+
+      // CHANGED: Handle empty discount field (now optional)
+      final double discount = _purchaseDiscountController.text.isEmpty
+          ? 0.0 // Default to 0 if empty
+          : double.parse(_purchaseDiscountController.text);
+
       final double netPurchasePrice = unitPrice - discount;
       final double sellPrice = double.parse(_sellPriceController.text);
       final double totalValue = netPurchasePrice * quantity;
@@ -41,7 +46,7 @@ class _AddMedicineScreenState extends State<AddMedicineScreen> {
         "generic": _genericController.text,
         "quantity": quantity,
         "unitPrice": unitPrice,
-        "purchaseDiscount": discount,
+        "purchaseDiscount": discount, // Will be 0.0 if empty
         "netPurchasePrice": netPurchasePrice,
         "sellPrice": sellPrice,
         "totalInventoryValue": totalValue,
@@ -49,7 +54,6 @@ class _AddMedicineScreenState extends State<AddMedicineScreen> {
       };
 
       // Replace with your backend URL
-      // const String apiUrl = "http://192.168.0.197:8080/api/inventory/receive";
       const String apiUrl = "http://192.168.0.186:8080/api/inventory/receive";
 
       try {
@@ -93,11 +97,13 @@ class _AddMedicineScreenState extends State<AddMedicineScreen> {
     }
   }
 
+  // CHANGED: Added isRequired parameter to make fields optional
   Widget _buildTextField(
     TextEditingController controller,
     String label, {
     bool isDecimal = false,
     bool isNumber = false,
+    bool isRequired = true, // New parameter to mark fields as optional
   }) {
     return Padding(
       padding: const EdgeInsets.only(bottom: 16),
@@ -110,10 +116,17 @@ class _AddMedicineScreenState extends State<AddMedicineScreen> {
             : TextInputType.text,
         decoration: InputDecoration(
           labelText: label,
+          hintText: isRequired ? null : 'Optional',
+          // Show hint for optional fields
           border: const OutlineInputBorder(),
         ),
-        validator: (value) =>
-            value == null || value.isEmpty ? 'Please enter $label' : null,
+        validator: (value) {
+          // Only validate if field is required
+          if (isRequired && (value == null || value.isEmpty)) {
+            return 'Please enter $label';
+          }
+          return null;
+        },
       ),
     );
   }
@@ -121,6 +134,7 @@ class _AddMedicineScreenState extends State<AddMedicineScreen> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
+      backgroundColor: Colors.teal,
       appBar: AppBar(
         title: const Text('Add Medicine'),
         backgroundColor: Colors.blueAccent,
@@ -141,10 +155,12 @@ class _AddMedicineScreenState extends State<AddMedicineScreen> {
               'Unit Price',
               isDecimal: true,
             ),
+            // CHANGED: Made purchase discount optional
             _buildTextField(
               _purchaseDiscountController,
               'Purchase Discount',
               isDecimal: true,
+              isRequired: false, // This makes the field optional
             ),
             _buildTextField(
               _sellPriceController,
@@ -162,7 +178,7 @@ class _AddMedicineScreenState extends State<AddMedicineScreen> {
             ElevatedButton(
               onPressed: _submitForm,
               style: ElevatedButton.styleFrom(
-                backgroundColor: Colors.blueAccent,
+                backgroundColor: Colors.white,
                 padding: const EdgeInsets.symmetric(vertical: 16),
               ),
               child: const Text('Add to Inventory'),

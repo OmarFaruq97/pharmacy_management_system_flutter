@@ -144,6 +144,7 @@ class _InventoryScreenState extends State<InventoryScreen> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
+      backgroundColor: Colors.teal,
       appBar: AppBar(
         title: const Text('Inventory'),
         centerTitle: true,
@@ -207,7 +208,8 @@ class _InventoryScreenState extends State<InventoryScreen> {
                           Text('Received: ${medicine.receivedDate}'),
                         const SizedBox(height: 12),
                         Row(
-                          mainAxisAlignment: MainAxisAlignment.end,
+                          mainAxisAlignment: MainAxisAlignment.center,
+
                           children: [
                             IconButton(
                               icon: const Icon(

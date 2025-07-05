@@ -1,9 +1,7 @@
 import 'dart:convert';
-
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:http/http.dart' as http;
-
 import '../model/inventory.dart';
 
 class CreateInvoiceScreen extends StatefulWidget {
@@ -17,6 +15,7 @@ class _CreateInvoiceScreenState extends State<CreateInvoiceScreen> {
   final TextEditingController _customerNameController = TextEditingController();
   final TextEditingController _contactNumberController =
       TextEditingController();
+  final TextEditingController _discountController = TextEditingController();
 
   List<Inventory> _inventoryList = [];
   bool _isLoadingInventory = true;
@@ -27,10 +26,13 @@ class _CreateInvoiceScreenState extends State<CreateInvoiceScreen> {
   void initState() {
     super.initState();
     _fetchInventory();
+
+    _discountController.addListener(() {
+      setState(() {});
+    });
   }
 
   Future<void> _fetchInventory() async {
-    // final url = Uri.parse('http://192.168.0.197:8080/api/inventory/all');
     final url = Uri.parse('http://192.168.0.186:8080/api/inventory/all');
     try {
       final response = await http.get(url);
@@ -50,17 +52,10 @@ class _CreateInvoiceScreenState extends State<CreateInvoiceScreen> {
     }
   }
 
-  void _addInvoiceItem(
-    Inventory inventory,
-    String quantityStr,
-    String discountStr,
-  ) {
-    final int quantity = int.tryParse(quantityStr) ?? 0;
+  void _addInvoiceItem(Inventory inventory, String qtyStr) {
+    final int quantity = int.tryParse(qtyStr) ?? 0;
     final double unitPrice = inventory.sellPrice;
-    final double amount = quantity * unitPrice;
-    final double discount = double.tryParse(discountStr) ?? 0;
-    final double discountAmount = amount * (discount / 100);
-    final double netPayable = amount - discountAmount;
+    final double subTotal = quantity * unitPrice;
 
     setState(() {
       _invoiceItems.add({
@@ -68,14 +63,26 @@ class _CreateInvoiceScreenState extends State<CreateInvoiceScreen> {
         "category": inventory.category,
         "quantity": quantity,
         "unitPrice": unitPrice,
-        "amount": amount,
-        "subTotal": amount,
-        "discount": discount,
-        "discountAmount": discountAmount,
-        "netPayable": netPayable,
+        "subTotal": subTotal,
       });
     });
   }
+
+  void _removeInvoiceItem(int index) {
+    setState(() {
+      _invoiceItems.removeAt(index);
+    });
+  }
+
+  double get totalAmount =>
+      _invoiceItems.fold(0.0, (sum, item) => sum + (item['subTotal'] ?? 0.0));
+
+  double get discountPercent =>
+      double.tryParse(_discountController.text) ?? 0.0;
+
+  double get discountAmount => totalAmount * (discountPercent / 100);
+
+  double get netPayable => totalAmount - discountAmount;
 
   Future<void> _submitInvoice() async {
     if (_invoiceItems.isEmpty ||
@@ -83,26 +90,28 @@ class _CreateInvoiceScreenState extends State<CreateInvoiceScreen> {
         _contactNumberController.text.isEmpty) {
       ScaffoldMessenger.of(context).showSnackBar(
         const SnackBar(
-          content: Text('Fill customer info & add at least one item!'),
+          content: Text('Fill customer info & add at least one item.'),
         ),
       );
       return;
     }
 
-    final List<Map<String, dynamic>> invoicePayload = _invoiceItems.map((item) {
+    final payload = _invoiceItems.map((item) {
       return {
         "customerName": _customerNameController.text,
         "contactNumber": _contactNumberController.text,
+        "discount": discountPercent,
+        "discountAmount": discountAmount,
+        "netPayable": netPayable,
         ...item,
       };
     }).toList();
 
-    // final url = Uri.parse('http://192.168.0.197:8080/api/invoice/create');
     final url = Uri.parse('http://192.168.0.186:8080/api/invoice/create');
     final response = await http.post(
       url,
       headers: {'Content-Type': 'application/json'},
-      body: jsonEncode(invoicePayload),
+      body: jsonEncode(payload),
     );
 
     if (response.statusCode == 200) {
@@ -126,19 +135,14 @@ class _CreateInvoiceScreenState extends State<CreateInvoiceScreen> {
   void _clearForm() {
     _customerNameController.clear();
     _contactNumberController.clear();
+    _discountController.clear();
     setState(() => _invoiceItems.clear());
-  }
-
-  @override
-  void dispose() {
-    _customerNameController.dispose();
-    _contactNumberController.dispose();
-    super.dispose();
   }
 
   @override
   Widget build(BuildContext context) {
     return Scaffold(
+      backgroundColor: Colors.teal.shade50,
       appBar: AppBar(
         title: const Text('Create Invoice'),
         centerTitle: true,
@@ -151,38 +155,60 @@ class _CreateInvoiceScreenState extends State<CreateInvoiceScreen> {
               child: Column(
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
-                  const Text(
-                    "Customer Info",
-                    style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold),
-                  ),
+                  _sectionTitle("Customer Info"),
                   _buildTextField(_customerNameController, "Customer Name"),
                   _buildTextField(
                     _contactNumberController,
-                    "Contact Number",
+                    "Phone Number",
                     keyboardType: TextInputType.phone,
                   ),
                   const SizedBox(height: 20),
-                  const Text(
-                    "Add Medicine",
-                    style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold),
-                  ),
+
+                  _sectionTitle("Medicine List"),
                   MedicineItemForm(
                     inventoryList: _inventoryList,
                     onAdd: _addInvoiceItem,
                   ),
-                  const SizedBox(height: 20),
-                  const Text(
-                    "Invoice Items",
-                    style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold),
-                  ),
-                  ..._invoiceItems.map(
-                    (item) => ListTile(
-                      title: Text('${item['itemName']} (${item['category']})'),
-                      subtitle: Text(
-                        'Qty: ${item['quantity']} | Total: ${item['netPayable'].toStringAsFixed(2)}',
+
+                  const SizedBox(height: 10),
+                  ..._invoiceItems.asMap().entries.map((entry) {
+                    final index = entry.key;
+                    final item = entry.value;
+                    return Card(
+                      margin: const EdgeInsets.symmetric(vertical: 5),
+                      child: ListTile(
+                        title: Text(
+                          '${item['itemName']} (${item['category']})',
+                        ),
+                        subtitle: Text(
+                          'Qty: ${item['quantity']} | Subtotal: ${item['subTotal'].toStringAsFixed(2)}',
+                        ),
+                        trailing: IconButton(
+                          icon: const Icon(
+                            Icons.remove_circle,
+                            color: Colors.red,
+                          ),
+                          onPressed: () => _removeInvoiceItem(index),
+                        ),
                       ),
+                    );
+                  }),
+
+                  const SizedBox(height: 20),
+                  _sectionTitle("Summary"),
+                  _buildTextField(
+                    _discountController,
+                    "Discount %",
+                    keyboardType: TextInputType.numberWithOptions(
+                      decimal: true,
                     ),
                   ),
+
+                  const SizedBox(height: 10),
+                  _summaryRow("Total Amount", totalAmount),
+                  _summaryRow("Discount Amount", discountAmount),
+                  _summaryRow("Net Payable", netPayable, bold: true),
+
                   const SizedBox(height: 20),
                   Center(
                     child: ElevatedButton.icon(
@@ -192,6 +218,10 @@ class _CreateInvoiceScreenState extends State<CreateInvoiceScreen> {
                       style: ElevatedButton.styleFrom(
                         backgroundColor: Colors.teal,
                         foregroundColor: Colors.white,
+                        padding: const EdgeInsets.symmetric(
+                          horizontal: 30,
+                          vertical: 12,
+                        ),
                       ),
                     ),
                   ),
@@ -201,22 +231,55 @@ class _CreateInvoiceScreenState extends State<CreateInvoiceScreen> {
     );
   }
 
+  Widget _sectionTitle(String text) => Padding(
+    padding: const EdgeInsets.symmetric(vertical: 8),
+    child: Text(
+      text,
+      style: const TextStyle(fontSize: 18, fontWeight: FontWeight.bold),
+    ),
+  );
+
   Widget _buildTextField(
     TextEditingController controller,
     String label, {
     TextInputType keyboardType = TextInputType.text,
   }) {
     return Padding(
-      padding: const EdgeInsets.symmetric(vertical: 8),
+      padding: const EdgeInsets.symmetric(vertical: 6),
       child: TextField(
         controller: controller,
         keyboardType: keyboardType,
         decoration: InputDecoration(
           labelText: label,
-          border: OutlineInputBorder(),
+          border: const OutlineInputBorder(),
           filled: true,
-          fillColor: Colors.grey[50],
+          fillColor: Colors.grey[100],
         ),
+      ),
+    );
+  }
+
+  Widget _summaryRow(String label, double value, {bool bold = false}) {
+    return Padding(
+      padding: const EdgeInsets.symmetric(vertical: 4),
+      child: Row(
+        mainAxisAlignment: MainAxisAlignment.spaceBetween,
+        children: [
+          Text(
+            label,
+            style: TextStyle(
+              fontSize: 16,
+              fontWeight: bold ? FontWeight.bold : FontWeight.normal,
+            ),
+          ),
+          Text(
+            value.toStringAsFixed(2),
+            style: TextStyle(
+              fontSize: 16,
+              fontWeight: bold ? FontWeight.bold : FontWeight.normal,
+            ),
+          ),
+        ],
       ),
     );
   }
@@ -224,7 +287,7 @@ class _CreateInvoiceScreenState extends State<CreateInvoiceScreen> {
 
 class MedicineItemForm extends StatefulWidget {
   final List<Inventory> inventoryList;
-  final Function(Inventory, String, String) onAdd;
+  final Function(Inventory, String) onAdd;
 
   const MedicineItemForm({
     super.key,
@@ -239,7 +302,6 @@ class MedicineItemForm extends StatefulWidget {
 class _MedicineItemFormState extends State<MedicineItemForm> {
   Inventory? selectedInventory;
   final TextEditingController _quantityController = TextEditingController();
-  final TextEditingController _discountController = TextEditingController();
 
   @override
   Widget build(BuildContext context) {
@@ -260,22 +322,14 @@ class _MedicineItemFormState extends State<MedicineItemForm> {
         const SizedBox(height: 8),
         Row(
           children: [
-            Expanded(child: _buildNumberField(_quantityController, 'Qty')),
-            const SizedBox(width: 10),
-            Expanded(
-              child: _buildNumberField(_discountController, 'Discount %'),
-            ),
-            const SizedBox(width: 10),
+            Expanded(child: _buildNumberField(_quantityController, 'Quantity')),
+            const SizedBox(width: 8),
             ElevatedButton(
               onPressed: () {
-                if (selectedInventory != null) {
-                  widget.onAdd(
-                    selectedInventory!,
-                    _quantityController.text,
-                    _discountController.text,
-                  );
+                if (selectedInventory != null &&
+                    _quantityController.text.isNotEmpty) {
+                  widget.onAdd(selectedInventory!, _quantityController.text);
                   _quantityController.clear();
-                  _discountController.clear();
                   setState(() => selectedInventory = null);
                 }
               },
@@ -283,6 +337,7 @@ class _MedicineItemFormState extends State<MedicineItemForm> {
             ),
           ],
         ),
+        const SizedBox(height: 10),
       ],
     );
   }

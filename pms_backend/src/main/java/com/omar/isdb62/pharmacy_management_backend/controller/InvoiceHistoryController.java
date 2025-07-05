@@ -26,22 +26,19 @@ public class InvoiceHistoryController {
 
     // GET by invoice number
     @GetMapping("/{invoiceNumber}")
-    public ResponseEntity<InvoiceHistory> getByInvoiceNumber(@PathVariable String invoiceNumber) {
-        InvoiceHistory invoice = invoiceHistoryService.getByInvoiceNumber(invoiceNumber);
-        return ResponseEntity.ok(invoice);
+    public ResponseEntity<List<InvoiceHistory>> getByInvoiceNumber(@PathVariable String invoiceNumber) {
+        List<InvoiceHistory> invoices = invoiceHistoryService.getByInvoiceNumber(invoiceNumber);
+        return ResponseEntity.ok(invoices);
     }
+
 
 
     //ChatGPT NOSTO code if not work above code then apply this code riha
     @PostMapping("/create")
     public ResponseEntity<List<InvoiceHistory>> createInvoice(@RequestBody List<InvoiceHistory> invoices) {
-        List<InvoiceHistory> savedInvoices = new ArrayList<>();
-        for (InvoiceHistory invoice : invoices) {
-            invoice.setInvoiceNumber(invoiceHistoryService.generateInvoiceNumber());
-            savedInvoices.add(invoiceHistoryService.createInvoice(invoice));
-        }
-        return ResponseEntity.ok(savedInvoices);
+        return ResponseEntity.ok(invoiceHistoryService.createInvoices(invoices));
     }
+
 
 
     // PUT (Update) by invoiceNumber

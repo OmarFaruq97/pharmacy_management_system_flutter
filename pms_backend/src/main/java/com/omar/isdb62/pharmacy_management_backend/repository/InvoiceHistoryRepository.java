@@ -13,13 +13,11 @@ import java.util.Optional;
 public interface InvoiceHistoryRepository extends JpaRepository<InvoiceHistory, Long> {
 
     // Find invoice by its invoice number
-    Optional<InvoiceHistory> findByInvoiceNumber(String invoiceNumber);
+//    Optional<InvoiceHistory> findByInvoiceNumber(String invoiceNumber);
+    List<InvoiceHistory> findByInvoiceNumber(String invoiceNumber);
 
     // Count how many invoices start with a specific prefix (used for generating new invoice number)
     int countByInvoiceNumberStartingWith(String prefix);
 
     List<InvoiceHistory> findByDate(LocalDate date);
-
-
-
 }

@@ -14,7 +14,6 @@ import java.util.List;
 
 @Service
 public class InvoiceHistoryService {
-
     @Autowired
     private InvoiceHistoryRepository invoiceHistoryRepository;
 
@@ -30,34 +29,63 @@ public class InvoiceHistoryService {
     }
 
     // Create invoice and update inventory
-    public InvoiceHistory createInvoice(InvoiceHistory invoice) {
-        invoice.setInvoiceNumber(generateInvoiceNumber());
-        invoice.setDate(LocalDate.now());
+//    public InvoiceHistory createInvoice(InvoiceHistory invoice) {
+//        invoice.setInvoiceNumber(generateInvoiceNumber());
+//        invoice.setDate(LocalDate.now());
+//
+//        //  Find the matching inventory by itemName and category
+//        Inventory inventory = inventoryRepository.findByItemNameAndCategory(
+//                invoice.getItemName(),
+//                invoice.getCategory()  // If "strength" now means "category"
+//        ).orElseThrow(() -> new RuntimeException("Inventory item not found for invoice."));
+//
+//        // Check if enough quantity exists
+//        if (inventory.getQuantity() < invoice.getQuantity()) {
+//            throw new RuntimeException("Not enough stock to complete the sale.");
+//        }
+//
+//        //  Reduce inventory quantity
+//        inventory.setQuantity(inventory.getQuantity() - invoice.getQuantity());
+//
+//        //  Save the updated inventory
+//        inventoryRepository.save(inventory);
+//
+//        // Save invoice record
+//        return invoiceHistoryRepository.save(invoice);
+//    }
 
-        //  Find the matching inventory by itemName and category
-        Inventory inventory = inventoryRepository.findByItemNameAndCategory(
-                invoice.getItemName(),
-                invoice.getCategory()  // If "strength" now means "category"
-        ).orElseThrow(() -> new RuntimeException("Inventory item not found for invoice."));
+    public List<InvoiceHistory> createInvoices(List<InvoiceHistory> invoices) {
+        String invoiceNumber = generateInvoiceNumber(); // Same number for all
 
-        // Check if enough quantity exists
-        if (inventory.getQuantity() < invoice.getQuantity()) {
-            throw new RuntimeException("Not enough stock to complete the sale.");
+        for (InvoiceHistory invoice : invoices) {
+            invoice.setInvoiceNumber(invoiceNumber);
+            invoice.setDate(LocalDate.now());
+
+            Inventory inventory = inventoryRepository.findByItemNameAndCategory(
+                            invoice.getItemName(), invoice.getCategory())
+                    .orElseThrow(() -> new RuntimeException("Inventory item not found."));
+
+            if (inventory.getQuantity() < invoice.getQuantity()) {
+                throw new RuntimeException("Not enough stock.");
+            }
+
+            inventory.setQuantity(inventory.getQuantity() - invoice.getQuantity());
+            inventoryRepository.save(inventory);
         }
 
-        //  Reduce inventory quantity
-        inventory.setQuantity(inventory.getQuantity() - invoice.getQuantity());
-
-        //  Save the updated inventory
-        inventoryRepository.save(inventory);
-
-        // Save invoice record
-        return invoiceHistoryRepository.save(invoice);
+        return invoiceHistoryRepository.saveAll(invoices);
     }
 
+
     public InvoiceHistory updateInvoiceByInvoiceNumber(String invoiceNumber, InvoiceHistory updatedInvoice) {
-        InvoiceHistory invoice = invoiceHistoryRepository.findByInvoiceNumber(invoiceNumber)
-                .orElseThrow(() -> new RuntimeException("Invoice not found with number: " + invoiceNumber));
+        List<InvoiceHistory> invoices = invoiceHistoryRepository.findByInvoiceNumber(invoiceNumber);
+
+        if (invoices.isEmpty()) {
+            throw new RuntimeException("Invoice not found with number: " + invoiceNumber);
+        }
+
+        // Update only the first invoice entry (or loop through all if needed)
+        InvoiceHistory invoice = invoices.get(0); // Assuming you're updating the first one only
 
         invoice.setCustomerName(updatedInvoice.getCustomerName());
         invoice.setContactNumber(updatedInvoice.getContactNumber());
@@ -69,26 +97,33 @@ public class InvoiceHistoryService {
         invoice.setDiscount(updatedInvoice.getDiscount());
         invoice.setDiscountAmount(updatedInvoice.getDiscountAmount());
         invoice.setNetPayable(updatedInvoice.getNetPayable());
-        invoice.setDate(LocalDate.now()); // set current date when creating invoice
-
+        invoice.setDate(LocalDate.now());
 
         return invoiceHistoryRepository.save(invoice);
     }
 
+
     public void deleteByInvoiceNumber(String invoiceNumber) {
-        InvoiceHistory invoice = invoiceHistoryRepository.findByInvoiceNumber(invoiceNumber)
-                .orElseThrow(() -> new RuntimeException("Invoice not found with number: " + invoiceNumber));
-        invoiceHistoryRepository.delete(invoice);
+        List<InvoiceHistory> invoices = invoiceHistoryRepository.findByInvoiceNumber(invoiceNumber);
+        if (invoices.isEmpty()) {
+            throw new RuntimeException("Invoice not found with number: " + invoiceNumber);
+        }
+        invoiceHistoryRepository.deleteAll(invoices);
     }
 
     public List<InvoiceHistory> getAllInvoiceHistories() {
         return invoiceHistoryRepository.findAll();
     }
 
-    public InvoiceHistory getByInvoiceNumber(String invoiceNumber) {
-        return invoiceHistoryRepository.findByInvoiceNumber(invoiceNumber)
-                .orElseThrow(() -> new RuntimeException("Invoice not found with number: " + invoiceNumber));
+    public List<InvoiceHistory> getByInvoiceNumber(String invoiceNumber) {
+        List<InvoiceHistory> invoices = invoiceHistoryRepository.findByInvoiceNumber(invoiceNumber);
+        if (invoices.isEmpty()) {
+            throw new RuntimeException("Invoice not found with number: " + invoiceNumber);
+        }
+        return invoices;
     }
+
+
 
     public List<InvoiceHistory> getTodaySales() {
         return invoiceHistoryRepository.findByDate(LocalDate.now());

@@ -11,7 +11,7 @@ class Inventory {
   final double sellPrice;
   final double? totalInventoryValue; // Nullable
   final String?
-  receivedDate; // LocalDate in Spring Boot, String for simplicity in Flutter
+  receivedDate;
 
   Inventory({
     required this.id,

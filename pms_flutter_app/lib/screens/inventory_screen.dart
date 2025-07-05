@@ -1,7 +1,9 @@
+import 'dart:convert';
+
 import 'package:flutter/material.dart';
 import 'package:http/http.dart' as http;
-import 'dart:convert';
 import 'package:pms_flutter_app/screens/add_medicine_screen.dart';
+
 import '../model/inventory.dart';
 
 class InventoryScreen extends StatefulWidget {
@@ -16,9 +18,9 @@ class _InventoryScreenState extends State<InventoryScreen> {
   bool _isLoading = true;
   String _errorMessage = '';
 
-  final String _baseUrl = 'http://192.168.0.197:8080/api/inventory';
+  // final String _baseUrl = 'http://192.168.0.197:8080/api/inventory';
 
-  // final String _baseUrl = 'http://192.168.0.186:8080/api/inventory';
+  final String _baseUrl = 'http://192.168.0.186:8080/api/inventory';
 
   @override
   void initState() {

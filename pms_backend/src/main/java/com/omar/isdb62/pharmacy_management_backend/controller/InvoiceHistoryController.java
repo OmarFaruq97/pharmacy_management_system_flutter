@@ -31,8 +31,6 @@ public class InvoiceHistoryController {
         return ResponseEntity.ok(invoices);
     }
 
-
-
     //ChatGPT NOSTO code if not work above code then apply this code riha
     @PostMapping("/create")
     public ResponseEntity<List<InvoiceHistory>> createInvoice(@RequestBody List<InvoiceHistory> invoices) {

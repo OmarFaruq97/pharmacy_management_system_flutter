@@ -48,9 +48,7 @@ class Inventory {
       // Ensure it's a double
       totalInventoryValue: (json['totalInventoryValue'] as num?)?.toDouble(),
       // Handle nullable
-      receivedDate:
-          json['receivedDate']
-              as String?,
+      receivedDate: json['receivedDate'] as String?,
     );
   }
 }

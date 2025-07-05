@@ -1,8 +1,8 @@
 import 'package:flutter/material.dart';
-import 'package:pms_flutter_app/screens/add_medicine_screen.dart'; // Ensure this path is correct
+import 'package:pms_flutter_app/screens/add_medicine_screen.dart';
 import 'package:pms_flutter_app/screens/create_invoice.dart';
 import 'package:pms_flutter_app/screens/inventory_screen.dart';
-import 'package:pms_flutter_app/screens/invoice_history_screen.dart'; // Import the InventoryScreen
+import 'package:pms_flutter_app/screens/invoice_history_screen.dart';
 
 void main() {
   runApp(const PmsApp());
@@ -17,10 +17,10 @@ class PmsApp extends StatelessWidget {
       title: 'Pharmacy Management System',
       theme: ThemeData(
         colorScheme: ColorScheme.fromSeed(seedColor: Colors.blueAccent),
-        useMaterial3: true, // Recommended for modern Flutter apps
+        useMaterial3: true,
       ),
       home: const MyHomePage(title: 'Pharmacy Management System'),
-      debugShowCheckedModeBanner: false, // Hides the debug banner
+      debugShowCheckedModeBanner: false,
     );
   }
 }
@@ -116,7 +116,7 @@ class _MyHomePageState extends State<MyHomePage> {
                 ),
               );
               break;
-            case 'Create-Invoices': // Updated case for invoice navigation
+            case 'Create-Invoices':
               Navigator.push(
                 context,
                 MaterialPageRoute(
@@ -134,12 +134,12 @@ class _MyHomePageState extends State<MyHomePage> {
               break;
             case 'Users':
               ScaffoldMessenger.of(context).showSnackBar(
-                const SnackBar(content: Text('Coming Soon: Users')),
+                const SnackBar(content: Text('Vai Coming Soon: Users')),
               );
               break;
             case 'Low-Stocks':
               ScaffoldMessenger.of(context).showSnackBar(
-                const SnackBar(content: Text('Coming Soon: Low Stocks')),
+                const SnackBar(content: Text('Vai Coming Soon: Low Stocks')),
               );
               break;
             default:

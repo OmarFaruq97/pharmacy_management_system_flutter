@@ -50,7 +50,7 @@ class Inventory {
       // Handle nullable
       receivedDate:
           json['receivedDate']
-              as String?, // Keep as String for now, can parse to DateTime if needed
+              as String?,
     );
   }
 }

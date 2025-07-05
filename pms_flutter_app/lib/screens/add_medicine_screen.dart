@@ -53,8 +53,9 @@ class _AddMedicineScreenState extends State<AddMedicineScreen> {
         "receivedDate": _receivedDate.toIso8601String(),
       };
 
-      // Replace with your backend URL
-      const String apiUrl = "http://192.168.0.186:8080/api/inventory/receive";
+
+      // const String apiUrl = "http://192.168.0.186:8080/api/inventory/receive";
+      const String apiUrl = "http://192.168.0.197:8080/api/inventory/receive";
 
       try {
         final response = await http.post(
@@ -97,13 +98,13 @@ class _AddMedicineScreenState extends State<AddMedicineScreen> {
     }
   }
 
-  // CHANGED: Added isRequired parameter to make fields optional
+
   Widget _buildTextField(
     TextEditingController controller,
     String label, {
     bool isDecimal = false,
     bool isNumber = false,
-    bool isRequired = true, // New parameter to mark fields as optional
+    bool isRequired = true,
   }) {
     return Padding(
       padding: const EdgeInsets.only(bottom: 16),

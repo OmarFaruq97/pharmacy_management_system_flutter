@@ -1,4 +1,3 @@
-// model/invoice_history.dart
 class InvoiceHistory {
   final String? invoiceNumber;
   final String customerName;

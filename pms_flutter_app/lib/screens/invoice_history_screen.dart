@@ -23,12 +23,15 @@ class _InvoiceHistoryScreenState extends State<InvoiceHistoryScreen> {
   Future<void> _fetchInvoices() async {
     try {
       final response = await http.get(
-        Uri.parse('http://192.168.0.186:8080/api/invoice/all'),
+        // Uri.parse('http://192.168.0.186:8080/api/invoice/all'),
+        Uri.parse('http://192.168.0.197:8080/api/invoice/all'),
       );
       if (response.statusCode == 200) {
         final List<dynamic> data = jsonDecode(response.body);
         setState(() {
-          _invoices = data.map((json) => InvoiceHistory.fromJson(json)).toList();
+          _invoices = data
+              .map((json) => InvoiceHistory.fromJson(json))
+              .toList();
           _isLoading = false;
         });
       } else {
@@ -54,35 +57,44 @@ class _InvoiceHistoryScreenState extends State<InvoiceHistoryScreen> {
           : _invoices.isEmpty
           ? const Center(child: Text('No invoices found.'))
           : ListView.builder(
-        itemCount: _invoices.length,
-        itemBuilder: (context, index) {
-          final invoice = _invoices[index];
-          return Card(
-            margin: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
-            elevation: 4,
-            child: ListTile(
-              title: Text(
-                'Invoice: ${invoice.invoiceNumber ?? 'N/A'}',
-                style: const TextStyle(fontWeight: FontWeight.bold),
-              ),
-              subtitle: Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: [
-                  Text('Customer: ${invoice.customerName}'),
-                  Text('Medicine: ${invoice.itemName} (${invoice.category})'),
-                  Text('Qty: ${invoice.quantity} x ${invoice.unitPrice}'),
-                  Text('Discount: ${invoice.discount}%'),
-                  Text('Net Payable: ${invoice.netPayable.toStringAsFixed(2)}'),
-                ],
-              ),
-              // trailing: Text(
-              //   invoice.date?.toString() ?? '',
-              //   style: const TextStyle(fontSize: 12),
-              // ),
+              itemCount: _invoices.length,
+              itemBuilder: (context, index) {
+                final invoice = _invoices[index];
+                return Card(
+                  margin: const EdgeInsets.symmetric(
+                    horizontal: 12,
+                    vertical: 6,
+                  ),
+                  elevation: 4,
+                  child: ListTile(
+                    title: Text(
+                      'Invoice: ${invoice.invoiceNumber ?? 'N/A'}',
+                      style: const TextStyle(fontWeight: FontWeight.bold),
+                    ),
+                    subtitle: Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
+                        Text('Customer: ${invoice.customerName}'),
+                        Text(
+                          'Medicine: ${invoice.itemName} (${invoice.category})',
+                        ),
+                        Text('Qty: ${invoice.quantity} Pisces'),
+                        Text('Unit Price: ${invoice.unitPrice}'),
+                        Text('Amount: ${invoice.amount}'),
+                        Text('Discount Amount: ${invoice.discountAmount} TAKA'),
+                        Text(
+                          'Net Payable: ${invoice.netPayable.toStringAsFixed(2)}',
+                        ),
+                      ],
+                    ),
+                    // trailing: Text(
+                    //   invoice.date?.toString() ?? '',
+                    //   style: const TextStyle(fontSize: 12),
+                    // ),
+                  ),
+                );
+              },
             ),
-          );
-        },
-      ),
     );
   }
 }

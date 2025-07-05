@@ -148,7 +148,7 @@ class _InventoryScreenState extends State<InventoryScreen> {
       appBar: AppBar(
         title: const Text('Inventory'),
         centerTitle: true,
-        backgroundColor: Colors.blueAccent,
+        backgroundColor: Theme.of(context).colorScheme.primary,
         foregroundColor: Colors.white,
       ),
       body: _isLoading
@@ -159,6 +159,7 @@ class _InventoryScreenState extends State<InventoryScreen> {
                 mainAxisAlignment: MainAxisAlignment.center,
                 children: [
                   Text(_errorMessage),
+
                   const SizedBox(height: 10),
                   ElevatedButton(
                     onPressed: _fetchMedicines,
@@ -180,6 +181,7 @@ class _InventoryScreenState extends State<InventoryScreen> {
                   shape: RoundedRectangleBorder(
                     borderRadius: BorderRadius.circular(12.0),
                   ),
+                  color: Colors.blueGrey,
                   child: Padding(
                     padding: const EdgeInsets.all(16.0),
                     child: Column(
@@ -190,26 +192,42 @@ class _InventoryScreenState extends State<InventoryScreen> {
                           style: const TextStyle(
                             fontSize: 18,
                             fontWeight: FontWeight.bold,
-                            color: Colors.blueAccent,
+                            color: Colors.yellow,
                           ),
                         ),
                         const SizedBox(height: 8),
-                        Text('Company: ${medicine.companyName}'),
-                        Text('Category: ${medicine.category}'),
-                        Text('Generic: ${medicine.generic}'),
-                        Text('Quantity: ${medicine.quantity}'),
+                        Text(
+                          'Company: ${medicine.companyName}',
+                          style: const TextStyle(color: Colors.white),
+                        ),
+                        Text(
+                          'Category: ${medicine.category}',
+                          style: const TextStyle(color: Colors.white),
+                        ),
+                        Text(
+                          'Generic: ${medicine.generic}',
+                          style: const TextStyle(color: Colors.white),
+                        ),
+                        Text(
+                          'Quantity: ${medicine.quantity}',
+                          style: const TextStyle(color: Colors.white),
+                        ),
                         Text(
                           'Unit Price: ${medicine.unitPrice.toStringAsFixed(2)}',
+                          style: const TextStyle(color: Colors.white),
                         ),
                         Text(
                           'Sell Price: ${medicine.sellPrice.toStringAsFixed(2)}',
+                          style: const TextStyle(color: Colors.white),
                         ),
                         if (medicine.receivedDate != null)
-                          Text('Received: ${medicine.receivedDate}'),
+                          Text(
+                            'Received: ${medicine.receivedDate}',
+                            style: const TextStyle(color: Colors.white),
+                          ),
                         const SizedBox(height: 12),
                         Row(
                           mainAxisAlignment: MainAxisAlignment.center,
-
                           children: [
                             IconButton(
                               icon: const Icon(

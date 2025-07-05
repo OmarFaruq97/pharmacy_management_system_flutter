@@ -137,7 +137,8 @@ class _AddMedicineScreenState extends State<AddMedicineScreen> {
       backgroundColor: Colors.teal,
       appBar: AppBar(
         title: const Text('Add Medicine'),
-        backgroundColor: Colors.blueAccent,
+        backgroundColor: Theme.of(context).colorScheme.primary,
+        foregroundColor: Colors.white,
         centerTitle: true,
       ),
       body: Form(

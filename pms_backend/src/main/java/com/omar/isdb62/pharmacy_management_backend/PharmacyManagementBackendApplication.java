@@ -11,5 +11,4 @@ public class PharmacyManagementBackendApplication {
 
 		System.out.println("riha code is running chill");
 	}
-
 }

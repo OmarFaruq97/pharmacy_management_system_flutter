@@ -181,7 +181,7 @@ class _CreateInvoiceScreenState extends State<CreateInvoiceScreen> {
                           '${item['itemName']} (${item['category']})',
                         ),
                         subtitle: Text(
-                          'Qty: ${item['quantity']} | Subtotal: ${item['subTotal'].toStringAsFixed(2)}',
+                          'Qty: ${item['quantity']} | Unit price:${item['unitPrice']} |Subtotal: ${item['subTotal'].toStringAsFixed(2)}',
                         ),
                         trailing: IconButton(
                           icon: const Icon(

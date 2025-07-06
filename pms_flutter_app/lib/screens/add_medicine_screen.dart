@@ -1,6 +1,6 @@
 import 'package:flutter/material.dart';
-import 'dart:convert';
-import 'package:http/http.dart' as http;
+
+import '../services/inventory_service.dart';
 
 class AddMedicineScreen extends StatefulWidget {
   const AddMedicineScreen({super.key});
@@ -29,12 +29,9 @@ class _AddMedicineScreenState extends State<AddMedicineScreen> {
     if (_formKey.currentState!.validate()) {
       final int quantity = int.parse(_quantityController.text);
       final double unitPrice = double.parse(_unitPriceController.text);
-
-      // CHANGED: Handle empty discount field (now optional)
       final double discount = _purchaseDiscountController.text.isEmpty
-          ? 0.0 // Default to 0 if empty
+          ? 0.0
           : double.parse(_purchaseDiscountController.text);
-
       final double netPurchasePrice = unitPrice - discount;
       final double sellPrice = double.parse(_sellPriceController.text);
       final double totalValue = netPurchasePrice * quantity;
@@ -46,33 +43,24 @@ class _AddMedicineScreenState extends State<AddMedicineScreen> {
         "generic": _genericController.text,
         "quantity": quantity,
         "unitPrice": unitPrice,
-        "purchaseDiscount": discount, // Will be 0.0 if empty
+        "purchaseDiscount": discount,
         "netPurchasePrice": netPurchasePrice,
         "sellPrice": sellPrice,
         "totalInventoryValue": totalValue,
         "receivedDate": _receivedDate.toIso8601String(),
       };
 
-      const String apiUrl = "http://192.168.0.186:8080/api/inventory/receive";
-      // const String apiUrl = "http://192.168.0.197:8080/api/inventory/receive";
-
+      // CALL HERE SERVICE TO SUBMIT DATA
       try {
-        final response = await http.post(
-          Uri.parse(apiUrl),
-          headers: {"Content-Type": "application/json"},
-          body: jsonEncode(medicineData),
-        );
-
-        if (response.statusCode == 200) {
+        final success = await InventoryService().submitMedicine(medicineData);
+        if (success) {
           ScaffoldMessenger.of(context).showSnackBar(
             const SnackBar(content: Text('Medicine added successfully')),
           );
           _formKey.currentState!.reset();
         } else {
           ScaffoldMessenger.of(context).showSnackBar(
-            SnackBar(
-              content: Text('Failed to add medicine: ${response.statusCode}'),
-            ),
+            const SnackBar(content: Text('Failed to add medicine')),
           );
         }
       } catch (e) {
@@ -82,6 +70,36 @@ class _AddMedicineScreenState extends State<AddMedicineScreen> {
       }
     }
   }
+
+  // Future<void> _submitForm() async {
+  //   if (_formKey.currentState!.validate()) {
+  //     final int quantity = int.parse(_quantityController.text);
+  //     final double unitPrice = double.parse(_unitPriceController.text);
+  //
+  //     // CHANGED: Handle empty discount field (now optional)
+  //     final double discount = _purchaseDiscountController.text.isEmpty
+  //         ? 0.0 // Default to 0 if empty
+  //         : double.parse(_purchaseDiscountController.text);
+  //
+  //     final double netPurchasePrice = unitPrice - discount;
+  //     final double sellPrice = double.parse(_sellPriceController.text);
+  //     final double totalValue = netPurchasePrice * quantity;
+  //
+  //     final Map<String, dynamic> medicineData = {
+  //       "companyName": _companyNameController.text,
+  //       "itemName": _itemNameController.text,
+  //       "category": _categoryController.text,
+  //       "generic": _genericController.text,
+  //       "quantity": quantity,
+  //       "unitPrice": unitPrice,
+  //       "purchaseDiscount": discount, // Will be 0.0 if empty
+  //       "netPurchasePrice": netPurchasePrice,
+  //       "sellPrice": sellPrice,
+  //       "totalInventoryValue": totalValue,
+  //       "receivedDate": _receivedDate.toIso8601String(),
+  //     };
+  //   }
+  // }
 
   void _pickDate() async {
     final DateTime? picked = await showDatePicker(

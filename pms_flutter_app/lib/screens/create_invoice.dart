@@ -1,7 +1,10 @@
 import 'dart:convert';
+
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:http/http.dart' as http;
+
+import '../modals/invoice_preview_modal.dart';
 import '../model/inventory.dart';
 
 class CreateInvoiceScreen extends StatefulWidget {
@@ -18,18 +21,14 @@ class _CreateInvoiceScreenState extends State<CreateInvoiceScreen> {
   final TextEditingController _discountController = TextEditingController();
 
   List<Inventory> _inventoryList = [];
-  bool _isLoadingInventory = true;
-
   List<Map<String, dynamic>> _invoiceItems = [];
+  bool _isLoadingInventory = true;
 
   @override
   void initState() {
     super.initState();
     _fetchInventory();
-
-    _discountController.addListener(() {
-      setState(() {});
-    });
+    _discountController.addListener(() => setState(() {}));
   }
 
   Future<void> _fetchInventory() async {
@@ -69,9 +68,7 @@ class _CreateInvoiceScreenState extends State<CreateInvoiceScreen> {
   }
 
   void _removeInvoiceItem(int index) {
-    setState(() {
-      _invoiceItems.removeAt(index);
-    });
+    setState(() => _invoiceItems.removeAt(index));
   }
 
   double get totalAmount =>
@@ -89,23 +86,23 @@ class _CreateInvoiceScreenState extends State<CreateInvoiceScreen> {
         _customerNameController.text.isEmpty ||
         _contactNumberController.text.isEmpty) {
       ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(
-          content: Text('Fill customer info & add at least one item.'),
-        ),
+        const SnackBar(content: Text('Fill customer info & add items.')),
       );
       return;
     }
 
-    final payload = _invoiceItems.map((item) {
-      return {
-        "customerName": _customerNameController.text,
-        "contactNumber": _contactNumberController.text,
-        "discount": discountPercent,
-        "discountAmount": discountAmount,
-        "netPayable": netPayable,
-        ...item,
-      };
-    }).toList();
+    final payload = _invoiceItems
+        .map(
+          (item) => {
+            "customerName": _customerNameController.text,
+            "contactNumber": _contactNumberController.text,
+            "discount": discountPercent,
+            "discountAmount": discountAmount,
+            "netPayable": netPayable,
+            ...item,
+          },
+        )
+        .toList();
 
     final url = Uri.parse('http://192.168.0.186:8080/api/invoice/create');
     final response = await http.post(
@@ -117,7 +114,7 @@ class _CreateInvoiceScreenState extends State<CreateInvoiceScreen> {
     if (response.statusCode == 200) {
       ScaffoldMessenger.of(context).showSnackBar(
         const SnackBar(
-          content: Text('Invoice created successfully'),
+          content: Text('Invoice created'),
           backgroundColor: Colors.green,
         ),
       );
@@ -162,8 +159,8 @@ class _CreateInvoiceScreenState extends State<CreateInvoiceScreen> {
                     "Phone Number",
                     keyboardType: TextInputType.phone,
                   ),
-                  const SizedBox(height: 20),
 
+                  const SizedBox(height: 20),
                   _sectionTitle("Medicine List"),
                   MedicineItemForm(
                     inventoryList: _inventoryList,
@@ -181,7 +178,7 @@ class _CreateInvoiceScreenState extends State<CreateInvoiceScreen> {
                           '${item['itemName']} (${item['category']})',
                         ),
                         subtitle: Text(
-                          'Qty: ${item['quantity']} | Unit price:${item['unitPrice']} |Subtotal: ${item['subTotal'].toStringAsFixed(2)}',
+                          'Qty: ${item['quantity']} | Unit: ${item['unitPrice']} | Subtotal: ${item['subTotal'].toStringAsFixed(2)}',
                         ),
                         trailing: IconButton(
                           icon: const Icon(
@@ -199,7 +196,7 @@ class _CreateInvoiceScreenState extends State<CreateInvoiceScreen> {
                   _buildTextField(
                     _discountController,
                     "Discount %",
-                    keyboardType: TextInputType.numberWithOptions(
+                    keyboardType: const TextInputType.numberWithOptions(
                       decimal: true,
                     ),
                   ),
@@ -210,20 +207,39 @@ class _CreateInvoiceScreenState extends State<CreateInvoiceScreen> {
                   _summaryRow("Net Payable", netPayable, bold: true),
 
                   const SizedBox(height: 20),
-                  Center(
-                    child: ElevatedButton.icon(
-                      onPressed: _submitInvoice,
-                      icon: const Icon(Icons.save),
-                      label: const Text('Submit Invoice'),
-                      style: ElevatedButton.styleFrom(
-                        backgroundColor: Colors.teal,
-                        foregroundColor: Colors.white,
-                        padding: const EdgeInsets.symmetric(
-                          horizontal: 30,
-                          vertical: 12,
+                  Row(
+                    mainAxisAlignment: MainAxisAlignment.spaceEvenly,
+                    children: [
+                      ElevatedButton.icon(
+                        onPressed: () {
+                          InvoicePreviewModal.show(
+                            context,
+                            customerName: _customerNameController.text,
+                            contactNumber: _contactNumberController.text,
+                            items: _invoiceItems,
+                            totalAmount: totalAmount,
+                            discount: discountPercent,
+                            discountAmount: discountAmount,
+                            netPayable: netPayable,
+                          );
+                        },
+                        icon: const Icon(Icons.visibility),
+                        label: const Text('Preview'),
+                        style: ElevatedButton.styleFrom(
+                          backgroundColor: Colors.blueGrey,
+                          foregroundColor: Colors.white,
                         ),
                       ),
-                    ),
+                      ElevatedButton.icon(
+                        onPressed: _submitInvoice,
+                        icon: const Icon(Icons.save),
+                        label: const Text('Submit Invoice'),
+                        style: ElevatedButton.styleFrom(
+                          backgroundColor: Colors.teal,
+                          foregroundColor: Colors.white,
+                        ),
+                      ),
+                    ],
                   ),
                 ],
               ),
@@ -310,12 +326,14 @@ class _MedicineItemFormState extends State<MedicineItemForm> {
         DropdownButtonFormField<Inventory>(
           value: selectedInventory,
           hint: const Text('Select Medicine'),
-          items: widget.inventoryList.map((inv) {
-            return DropdownMenuItem(
-              value: inv,
-              child: Text('${inv.itemName} (${inv.category})'),
-            );
-          }).toList(),
+          items: widget.inventoryList
+              .map(
+                (inv) => DropdownMenuItem(
+                  value: inv,
+                  child: Text('${inv.itemName} (${inv.category})'),
+                ),
+              )
+              .toList(),
           onChanged: (value) => setState(() => selectedInventory = value),
           decoration: const InputDecoration(border: OutlineInputBorder()),
         ),
@@ -337,7 +355,6 @@ class _MedicineItemFormState extends State<MedicineItemForm> {
             ),
           ],
         ),
-        const SizedBox(height: 10),
       ],
     );
   }

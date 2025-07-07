@@ -1,10 +1,7 @@
-import 'dart:convert';
-
 import 'package:flutter/material.dart';
-import 'package:http/http.dart' as http;
-import 'package:pms_flutter_app/screens/add_medicine_screen.dart';
-
 import '../model/inventory.dart';
+import '../services/inventory_service.dart';
+import 'add_medicine_screen.dart';
 
 class InventoryScreen extends StatefulWidget {
   const InventoryScreen({super.key});
@@ -17,10 +14,8 @@ class _InventoryScreenState extends State<InventoryScreen> {
   List<Inventory> _medicines = [];
   bool _isLoading = true;
   String _errorMessage = '';
-
-  // final String _baseUrl = 'http://192.168.0.197:8080/api/inventory';
-
-  final String _baseUrl = 'http://192.168.0.186:8080/api/inventory';
+  final TextEditingController _searchController = TextEditingController();
+  final InventoryService _inventoryService = InventoryService();
 
   @override
   void initState() {
@@ -35,21 +30,11 @@ class _InventoryScreenState extends State<InventoryScreen> {
     });
 
     try {
-      final response = await http.get(Uri.parse('$_baseUrl/all'));
-      if (response.statusCode == 200) {
-        List<dynamic> jsonList = jsonDecode(response.body);
-        setState(() {
-          _medicines = jsonList
-              .map((json) => Inventory.fromJson(json))
-              .toList();
-          _isLoading = false;
-        });
-      } else {
-        setState(() {
-          _errorMessage = 'Failed to load medicines: ${response.statusCode}';
-          _isLoading = false;
-        });
-      }
+      final data = await _inventoryService.fetchAllMedicines();
+      setState(() {
+        _medicines = data;
+        _isLoading = false;
+      });
     } catch (e) {
       setState(() {
         _errorMessage = 'Error: $e';
@@ -58,90 +43,29 @@ class _InventoryScreenState extends State<InventoryScreen> {
     }
   }
 
-  Future<void> _deleteMedicine(String name, String category) async {
-    final response = await http.delete(
-      Uri.parse(
-        '$_baseUrl/delete-by-name-and-category?name=$name&category=$category',
-      ),
-    );
-
-    if (response.statusCode == 200) {
-      ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(
-          content: Text('Medicine deleted successfully'),
-          backgroundColor: Colors.green,
-        ),
-      );
+  Future<void> _searchMedicines(String query) async {
+    if (query.isEmpty) {
       _fetchMedicines();
-    } else {
-      ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(
-          content: Text('Delete failed: ${response.body}'),
-          backgroundColor: Colors.red,
-        ),
-      );
+      return;
     }
-  }
 
-  void _showUpdateDialog(Inventory medicine) {
-    final TextEditingController priceController = TextEditingController(
-      text: medicine.sellPrice.toString(),
-    );
+    setState(() {
+      _isLoading = true;
+      _errorMessage = '';
+    });
 
-    showDialog(
-      context: context,
-      builder: (context) => AlertDialog(
-        title: const Text('Update Sell Price'),
-        content: TextField(
-          controller: priceController,
-          keyboardType: TextInputType.numberWithOptions(decimal: true),
-          decoration: const InputDecoration(labelText: 'New Sell Price'),
-        ),
-        actions: [
-          TextButton(
-            onPressed: () => Navigator.pop(context),
-            child: const Text('Cancel'),
-          ),
-          ElevatedButton(
-            onPressed: () async {
-              final newPrice = double.tryParse(priceController.text);
-              if (newPrice != null) {
-                final response = await http.put(
-                  Uri.parse(
-                    '$_baseUrl/update-by-name-and-category?name=${medicine.itemName}&category=${medicine.category}',
-                  ),
-                  headers: {'Content-Type': 'application/json'},
-                  body: jsonEncode({
-                    'itemName': medicine.itemName,
-                    'category': medicine.category,
-                    'sellPrice': newPrice,
-                  }),
-                );
-
-                if (response.statusCode == 200) {
-                  ScaffoldMessenger.of(context).showSnackBar(
-                    const SnackBar(
-                      content: Text('Updated successfully'),
-                      backgroundColor: Colors.green,
-                    ),
-                  );
-                  Navigator.pop(context);
-                  _fetchMedicines();
-                } else {
-                  ScaffoldMessenger.of(context).showSnackBar(
-                    SnackBar(
-                      content: Text('Update failed: ${response.body}'),
-                      backgroundColor: Colors.red,
-                    ),
-                  );
-                }
-              }
-            },
-            child: const Text('Update'),
-          ),
-        ],
-      ),
-    );
+    try {
+      final data = await _inventoryService.searchMedicines(query);
+      setState(() {
+        _medicines = data;
+        _isLoading = false;
+      });
+    } catch (e) {
+      setState(() {
+        _errorMessage = 'Search error: $e';
+        _isLoading = false;
+      });
+    }
   }
 
   @override
@@ -153,6 +77,25 @@ class _InventoryScreenState extends State<InventoryScreen> {
         centerTitle: true,
         backgroundColor: Theme.of(context).colorScheme.primary,
         foregroundColor: Colors.white,
+        bottom: PreferredSize(
+          preferredSize: const Size.fromHeight(60.0),
+          child: Padding(
+            padding: const EdgeInsets.all(8.0),
+            child: TextField(
+              controller: _searchController,
+              onChanged: _searchMedicines,
+              decoration: InputDecoration(
+                hintText: 'Search by medicine name...',
+                prefixIcon: const Icon(Icons.search),
+                fillColor: Colors.white,
+                filled: true,
+                border: OutlineInputBorder(
+                  borderRadius: BorderRadius.circular(8.0),
+                ),
+              ),
+            ),
+          ),
+        ),
       ),
       body: _isLoading
           ? const Center(child: CircularProgressIndicator())
@@ -162,7 +105,6 @@ class _InventoryScreenState extends State<InventoryScreen> {
                 mainAxisAlignment: MainAxisAlignment.center,
                 children: [
                   Text(_errorMessage),
-
                   const SizedBox(height: 10),
                   ElevatedButton(
                     onPressed: _fetchMedicines,
@@ -172,33 +114,29 @@ class _InventoryScreenState extends State<InventoryScreen> {
               ),
             )
           : _medicines.isEmpty
-          ? const Center(child: Text('No medicines found in inventory.'))
+          ? const Center(child: Text('No medicines found.'))
           : ListView.builder(
               padding: const EdgeInsets.all(8.0),
               itemCount: _medicines.length,
               itemBuilder: (context, index) {
                 final medicine = _medicines[index];
                 return Card(
-                  margin: const EdgeInsets.symmetric(vertical: 8.0),
-                  elevation: 4.0,
+                  color: Colors.blueGrey,
                   shape: RoundedRectangleBorder(
                     borderRadius: BorderRadius.circular(12.0),
                   ),
-                  color: Colors.blueGrey,
-                  child: Padding(
-                    padding: const EdgeInsets.all(16.0),
-                    child: Column(
+                  margin: const EdgeInsets.symmetric(vertical: 8.0),
+                  child: ListTile(
+                    title: Text(
+                      medicine.itemName,
+                      style: const TextStyle(
+                        fontWeight: FontWeight.bold,
+                        color: Colors.yellow,
+                      ),
+                    ),
+                    subtitle: Column(
                       crossAxisAlignment: CrossAxisAlignment.start,
                       children: [
-                        Text(
-                          medicine.itemName,
-                          style: const TextStyle(
-                            fontSize: 18,
-                            fontWeight: FontWeight.bold,
-                            color: Colors.yellow,
-                          ),
-                        ),
-                        const SizedBox(height: 8),
                         Text(
                           'Company: ${medicine.companyName}',
                           style: const TextStyle(color: Colors.white),
@@ -214,42 +152,6 @@ class _InventoryScreenState extends State<InventoryScreen> {
                         Text(
                           'Quantity: ${medicine.quantity}',
                           style: const TextStyle(color: Colors.white),
-                        ),
-                        Text(
-                          'Unit Price: ${medicine.unitPrice.toStringAsFixed(2)}',
-                          style: const TextStyle(color: Colors.white),
-                        ),
-                        Text(
-                          'Sell Price: ${medicine.sellPrice.toStringAsFixed(2)}',
-                          style: const TextStyle(color: Colors.white),
-                        ),
-                        if (medicine.receivedDate != null)
-                          Text(
-                            'Received: ${medicine.receivedDate}',
-                            style: const TextStyle(color: Colors.white),
-                          ),
-                        const SizedBox(height: 12),
-                        Row(
-                          mainAxisAlignment: MainAxisAlignment.center,
-                          children: [
-                            IconButton(
-                              icon: const Icon(
-                                Icons.edit_attributes,
-                                color: Colors.orange,
-                              ),
-                              onPressed: () => _showUpdateDialog(medicine),
-                            ),
-                            IconButton(
-                              icon: const Icon(
-                                Icons.delete_forever_outlined,
-                                color: Colors.red,
-                              ),
-                              onPressed: () => _deleteMedicine(
-                                medicine.itemName,
-                                medicine.category,
-                              ),
-                            ),
-                          ],
                         ),
                       ],
                     ),
@@ -268,8 +170,6 @@ class _InventoryScreenState extends State<InventoryScreen> {
           }
         },
         backgroundColor: Colors.blueAccent,
-        foregroundColor: Colors.white,
-        tooltip: 'Add New Medicine',
         child: const Icon(Icons.add),
       ),
     );

@@ -153,6 +153,10 @@ class _InventoryScreenState extends State<InventoryScreen> {
                           'Quantity: ${medicine.quantity}',
                           style: const TextStyle(color: Colors.white),
                         ),
+                        Text(
+                          'Sales Unit price: ${medicine.unitPrice}',
+                          style: const TextStyle(color: Colors.white),
+                        ),
                       ],
                     ),
                   ),

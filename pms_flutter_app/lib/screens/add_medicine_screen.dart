@@ -1,5 +1,4 @@
 import 'package:flutter/material.dart';
-
 import '../services/inventory_service.dart';
 
 class AddMedicineScreen extends StatefulWidget {
@@ -20,7 +19,7 @@ class _AddMedicineScreenState extends State<AddMedicineScreen> {
   final TextEditingController _quantityController = TextEditingController();
   final TextEditingController _unitPriceController = TextEditingController();
   final TextEditingController _purchaseDiscountController =
-      TextEditingController(); // Now optional
+      TextEditingController();
   final TextEditingController _sellPriceController = TextEditingController();
 
   DateTime _receivedDate = DateTime.now();
@@ -70,36 +69,6 @@ class _AddMedicineScreenState extends State<AddMedicineScreen> {
       }
     }
   }
-
-  // Future<void> _submitForm() async {
-  //   if (_formKey.currentState!.validate()) {
-  //     final int quantity = int.parse(_quantityController.text);
-  //     final double unitPrice = double.parse(_unitPriceController.text);
-  //
-  //     // CHANGED: Handle empty discount field (now optional)
-  //     final double discount = _purchaseDiscountController.text.isEmpty
-  //         ? 0.0 // Default to 0 if empty
-  //         : double.parse(_purchaseDiscountController.text);
-  //
-  //     final double netPurchasePrice = unitPrice - discount;
-  //     final double sellPrice = double.parse(_sellPriceController.text);
-  //     final double totalValue = netPurchasePrice * quantity;
-  //
-  //     final Map<String, dynamic> medicineData = {
-  //       "companyName": _companyNameController.text,
-  //       "itemName": _itemNameController.text,
-  //       "category": _categoryController.text,
-  //       "generic": _genericController.text,
-  //       "quantity": quantity,
-  //       "unitPrice": unitPrice,
-  //       "purchaseDiscount": discount, // Will be 0.0 if empty
-  //       "netPurchasePrice": netPurchasePrice,
-  //       "sellPrice": sellPrice,
-  //       "totalInventoryValue": totalValue,
-  //       "receivedDate": _receivedDate.toIso8601String(),
-  //     };
-  //   }
-  // }
 
   void _pickDate() async {
     final DateTime? picked = await showDatePicker(

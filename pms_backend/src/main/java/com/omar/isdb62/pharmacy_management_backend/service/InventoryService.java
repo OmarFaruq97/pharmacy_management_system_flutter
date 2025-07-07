@@ -13,6 +13,11 @@ public class InventoryService {
 
     private final InventoryRepository inventoryRepository;
 
+    public List<Inventory> getAllInventorySortedByItemName() {
+        return inventoryRepository.findAllByOrderByItemNameAsc();
+    }
+
+
     public InventoryService(InventoryRepository inventoryRepository) {
         this.inventoryRepository = inventoryRepository;
     }

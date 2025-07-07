@@ -17,10 +17,16 @@ public class InventoryController {
     @Autowired
     private InventoryService inventoryService;
 
+//    @GetMapping("/all")
+//    public List<Inventory> getAllMedicine() {
+//        return inventoryService.getAllMedicine();
+//    }
+
     @GetMapping("/all")
-    public List<Inventory> getAllMedicine() {
-        return inventoryService.getAllMedicine();
+    public List<Inventory> getAllInventory() {
+        return inventoryService.getAllInventorySortedByItemName();
     }
+
 
     @GetMapping("/search")
     public List<Inventory> getMedByName(@RequestParam String name) {

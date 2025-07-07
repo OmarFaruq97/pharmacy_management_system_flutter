@@ -8,7 +8,6 @@ public class PharmacyManagementBackendApplication {
 
 	public static void main(String[] args) {
 		SpringApplication.run(PharmacyManagementBackendApplication.class, args);
-
 		System.out.println("riha code is running chill");
 	}
 }

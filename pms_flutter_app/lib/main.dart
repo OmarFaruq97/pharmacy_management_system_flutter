@@ -3,6 +3,7 @@ import 'package:pms_flutter_app/screens/add_medicine_screen.dart';
 import 'package:pms_flutter_app/screens/create_invoice.dart';
 import 'package:pms_flutter_app/screens/inventory_screen.dart';
 import 'package:pms_flutter_app/screens/invoice_history_screen.dart';
+import 'package:pms_flutter_app/screens/low_stocks_screen.dart';
 
 void main() {
   runApp(const PmsApp());
@@ -138,8 +139,11 @@ class _MyHomePageState extends State<MyHomePage> {
               );
               break;
             case 'Low-Stocks':
-              ScaffoldMessenger.of(context).showSnackBar(
-                const SnackBar(content: Text('Vai Coming Soon: Low Stocks')),
+              Navigator.push(
+                context,
+                MaterialPageRoute(
+                  builder: (context) => const LowStocksScreen(),
+                ),
               );
               break;
             default:

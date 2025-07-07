@@ -2,6 +2,7 @@ import 'dart:convert';
 
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
+import 'package:flutter_typeahead/flutter_typeahead.dart';
 import 'package:http/http.dart' as http;
 
 import '../modals/invoice_preview_modal.dart';
@@ -20,35 +21,12 @@ class _CreateInvoiceScreenState extends State<CreateInvoiceScreen> {
       TextEditingController();
   final TextEditingController _discountController = TextEditingController();
 
-  List<Inventory> _inventoryList = [];
   List<Map<String, dynamic>> _invoiceItems = [];
-  bool _isLoadingInventory = true;
 
   @override
   void initState() {
     super.initState();
-    _fetchInventory();
     _discountController.addListener(() => setState(() {}));
-  }
-
-  Future<void> _fetchInventory() async {
-    final url = Uri.parse('http://192.168.0.186:8080/api/inventory/all');
-    try {
-      final response = await http.get(url);
-      if (response.statusCode == 200) {
-        final List<dynamic> data = jsonDecode(response.body);
-        setState(() {
-          _inventoryList = data
-              .map((json) => Inventory.fromJson(json))
-              .toList();
-          _isLoadingInventory = false;
-        });
-      } else {
-        setState(() => _isLoadingInventory = false);
-      }
-    } catch (e) {
-      setState(() => _isLoadingInventory = false);
-    }
   }
 
   void _addInvoiceItem(Inventory inventory, String qtyStr) {
@@ -145,105 +123,95 @@ class _CreateInvoiceScreenState extends State<CreateInvoiceScreen> {
         centerTitle: true,
         backgroundColor: Colors.teal,
       ),
-      body: _isLoadingInventory
-          ? const Center(child: CircularProgressIndicator())
-          : SingleChildScrollView(
-              padding: const EdgeInsets.all(16),
-              child: Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: [
-                  _sectionTitle("Customer Info"),
-                  _buildTextField(_customerNameController, "Customer Name"),
-                  _buildTextField(
-                    _contactNumberController,
-                    "Phone Number",
-                    keyboardType: TextInputType.phone,
+      body: SingleChildScrollView(
+        padding: const EdgeInsets.all(16),
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            _sectionTitle("Customer Info"),
+            _buildTextField(_customerNameController, "Customer Name"),
+            _buildTextField(
+              _contactNumberController,
+              "Phone Number",
+              keyboardType: TextInputType.phone,
+            ),
+
+            const SizedBox(height: 20),
+            _sectionTitle("Medicine List"),
+            MedicineItemForm(onAdd: _addInvoiceItem),
+
+            const SizedBox(height: 10),
+            ..._invoiceItems.asMap().entries.map((entry) {
+              final index = entry.key;
+              final item = entry.value;
+              return Card(
+                margin: const EdgeInsets.symmetric(vertical: 5),
+                child: ListTile(
+                  title: Text('${item['itemName']} (${item['category']})'),
+                  subtitle: Text(
+                    'Qty: ${item['quantity']} | Unit: ${item['unitPrice']} | Subtotal: ${item['subTotal'].toStringAsFixed(2)}',
                   ),
-
-                  const SizedBox(height: 20),
-                  _sectionTitle("Medicine List"),
-                  MedicineItemForm(
-                    inventoryList: _inventoryList,
-                    onAdd: _addInvoiceItem,
+                  trailing: IconButton(
+                    icon: const Icon(Icons.remove_circle, color: Colors.red),
+                    onPressed: () => _removeInvoiceItem(index),
                   ),
+                ),
+              );
+            }),
 
-                  const SizedBox(height: 10),
-                  ..._invoiceItems.asMap().entries.map((entry) {
-                    final index = entry.key;
-                    final item = entry.value;
-                    return Card(
-                      margin: const EdgeInsets.symmetric(vertical: 5),
-                      child: ListTile(
-                        title: Text(
-                          '${item['itemName']} (${item['category']})',
-                        ),
-                        subtitle: Text(
-                          'Qty: ${item['quantity']} | Unit: ${item['unitPrice']} | Subtotal: ${item['subTotal'].toStringAsFixed(2)}',
-                        ),
-                        trailing: IconButton(
-                          icon: const Icon(
-                            Icons.remove_circle,
-                            color: Colors.red,
-                          ),
-                          onPressed: () => _removeInvoiceItem(index),
-                        ),
-                      ),
-                    );
-                  }),
-
-                  const SizedBox(height: 20),
-                  _sectionTitle("Summary"),
-                  _buildTextField(
-                    _discountController,
-                    "Discount %",
-                    keyboardType: const TextInputType.numberWithOptions(
-                      decimal: true,
-                    ),
-                  ),
-
-                  const SizedBox(height: 10),
-                  _summaryRow("Total Amount", totalAmount),
-                  _summaryRow("Discount Amount", discountAmount),
-                  _summaryRow("Net Payable", netPayable, bold: true),
-
-                  const SizedBox(height: 20),
-                  Row(
-                    mainAxisAlignment: MainAxisAlignment.spaceEvenly,
-                    children: [
-                      ElevatedButton.icon(
-                        onPressed: () {
-                          InvoicePreviewModal.show(
-                            context,
-                            customerName: _customerNameController.text,
-                            contactNumber: _contactNumberController.text,
-                            items: _invoiceItems,
-                            totalAmount: totalAmount,
-                            discount: discountPercent,
-                            discountAmount: discountAmount,
-                            netPayable: netPayable,
-                          );
-                        },
-                        icon: const Icon(Icons.visibility),
-                        label: const Text('Preview'),
-                        style: ElevatedButton.styleFrom(
-                          backgroundColor: Colors.blueGrey,
-                          foregroundColor: Colors.white,
-                        ),
-                      ),
-                      ElevatedButton.icon(
-                        onPressed: _submitInvoice,
-                        icon: const Icon(Icons.save),
-                        label: const Text('Submit Invoice'),
-                        style: ElevatedButton.styleFrom(
-                          backgroundColor: Colors.teal,
-                          foregroundColor: Colors.white,
-                        ),
-                      ),
-                    ],
-                  ),
-                ],
+            const SizedBox(height: 20),
+            _sectionTitle("Summary"),
+            _buildTextField(
+              _discountController,
+              "Discount %",
+              keyboardType: const TextInputType.numberWithOptions(
+                decimal: true,
               ),
             ),
+
+            const SizedBox(height: 10),
+            _summaryRow("Total Amount", totalAmount),
+            _summaryRow("Discount Amount", discountAmount),
+            _summaryRow("Net Payable", netPayable, bold: true),
+
+            const SizedBox(height: 20),
+            Row(
+              mainAxisAlignment: MainAxisAlignment.spaceEvenly,
+              children: [
+                ElevatedButton.icon(
+                  onPressed: () {
+                    InvoicePreviewModal.show(
+                      context,
+                      customerName: _customerNameController.text,
+                      contactNumber: _contactNumberController.text,
+                      items: _invoiceItems,
+                      totalAmount: totalAmount,
+                      discount: discountPercent,
+                      discountAmount: discountAmount,
+                      netPayable: netPayable,
+                    );
+                  },
+                  icon: const Icon(Icons.visibility),
+                  label: const Text('Preview'),
+                  style: ElevatedButton.styleFrom(
+                    backgroundColor: Colors.blueGrey,
+                    foregroundColor: Colors.white,
+                  ),
+                ),
+                ElevatedButton.icon(
+                  onPressed: _submitInvoice,
+                  icon: const Icon(Icons.save),
+                  label: const Text('Submit Invoice'),
+                  style: ElevatedButton.styleFrom(
+                    backgroundColor: Colors.teal,
+                    foregroundColor: Colors.white,
+                  ),
+                ),
+              ],
+            ),
+          ],
+        ),
+      ),
     );
   }
 
@@ -302,40 +270,57 @@ class _CreateInvoiceScreenState extends State<CreateInvoiceScreen> {
 }
 
 class MedicineItemForm extends StatefulWidget {
-  final List<Inventory> inventoryList;
   final Function(Inventory, String) onAdd;
 
-  const MedicineItemForm({
-    super.key,
-    required this.inventoryList,
-    required this.onAdd,
-  });
+  const MedicineItemForm({super.key, required this.onAdd});
 
   @override
   State<MedicineItemForm> createState() => _MedicineItemFormState();
 }
 
 class _MedicineItemFormState extends State<MedicineItemForm> {
-  Inventory? selectedInventory;
+  final TextEditingController _searchController = TextEditingController();
   final TextEditingController _quantityController = TextEditingController();
+  Inventory? selectedInventory;
+
+  Future<List<Inventory>> _searchMedicines(String query) async {
+    final response = await http.get(
+      Uri.parse('http://192.168.0.186:8080/api/inventory/search?name=$query'),
+    );
+    if (response.statusCode == 200) {
+      final List<dynamic> data = jsonDecode(response.body);
+      return data.map((e) => Inventory.fromJson(e)).toList();
+    } else {
+      return [];
+    }
+  }
 
   @override
   Widget build(BuildContext context) {
     return Column(
       children: [
-        DropdownButtonFormField<Inventory>(
-          value: selectedInventory,
-          hint: const Text('Select Medicine'),
-          items: widget.inventoryList
-              .map(
-                (inv) => DropdownMenuItem(
-                  value: inv,
-                  child: Text('${inv.itemName} (${inv.category})'),
-                ),
-              )
-              .toList(),
-          onChanged: (value) => setState(() => selectedInventory = value),
-          decoration: const InputDecoration(border: OutlineInputBorder()),
+        //here use flutter_typeahead: ^4.3.7 dependencies backdated
+        TypeAheadFormField<Inventory>(
+          textFieldConfiguration: TextFieldConfiguration(
+            controller: _searchController,
+            decoration: const InputDecoration(
+              labelText: 'Search Medicine',
+              border: OutlineInputBorder(),
+            ),
+          ),
+          suggestionsCallback: _searchMedicines,
+          itemBuilder: (context, Inventory suggestion) {
+            return ListTile(
+              title: Text('${suggestion.itemName} (${suggestion.category})'),
+            );
+          },
+          onSuggestionSelected: (Inventory suggestion) {
+            setState(() {
+              selectedInventory = suggestion;
+              _searchController.text =
+                  '${suggestion.itemName} (${suggestion.category})';
+            });
+          },
         ),
         const SizedBox(height: 8),
         Row(
@@ -348,6 +333,7 @@ class _MedicineItemFormState extends State<MedicineItemForm> {
                     _quantityController.text.isNotEmpty) {
                   widget.onAdd(selectedInventory!, _quantityController.text);
                   _quantityController.clear();
+                  _searchController.clear();
                   setState(() => selectedInventory = null);
                 }
               },

@@ -25,8 +25,8 @@ class _InvoiceHistoryScreenState extends State<InvoiceHistoryScreen> {
   Future<void> _fetchInvoices() async {
     try {
       final response = await http.get(
-        Uri.parse('http://192.168.0.186:8080/api/invoice/all'),
-        // Uri.parse('http://192.168.0.197:8080/api/invoice/all'),
+        // Uri.parse('http://192.168.0.186:8080/api/invoice/all'),
+         Uri.parse('http://192.168.0.197:8080/api/invoice/all'),
       );
       if (response.statusCode == 200) {
         final List<dynamic> data = jsonDecode(response.body);

@@ -15,7 +15,8 @@ class _LowStocksScreenState extends State<LowStocksScreen> {
   bool _isLoading = true;
   String _errorMessage = '';
 
-  final String _baseUrl = 'http://192.168.0.186:8080/api/inventory/low-stock';
+  // final String _baseUrl = 'http://192.168.0.186:8080/api/inventory/low-stock';
+  final String _baseUrl = 'http://192.168.0.197:8080/api/inventory/low-stock';
 
   @override
   void initState() {

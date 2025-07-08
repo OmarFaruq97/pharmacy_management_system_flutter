@@ -1,5 +1,3 @@
-// ✅ Full Updated CreateInvoiceScreen with separated API service and medicine search box
-
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_typeahead/flutter_typeahead.dart';
@@ -16,7 +14,8 @@ class CreateInvoiceScreen extends StatefulWidget {
 
 class _CreateInvoiceScreenState extends State<CreateInvoiceScreen> {
   final TextEditingController _customerNameController = TextEditingController();
-  final TextEditingController _contactNumberController = TextEditingController();
+  final TextEditingController _contactNumberController =
+      TextEditingController();
   final TextEditingController _discountController = TextEditingController();
 
   final InvoiceService _invoiceService = InvoiceService();
@@ -72,25 +71,31 @@ class _CreateInvoiceScreenState extends State<CreateInvoiceScreen> {
     final payload = _invoiceItems
         .map(
           (item) => {
-        "customerName": _customerNameController.text,
-        "contactNumber": _contactNumberController.text,
-        "discount": discountPercent,
-        "discountAmount": discountAmount,
-        "netPayable": netPayable,
-        ...item,
-      },
-    )
+            "customerName": _customerNameController.text,
+            "contactNumber": _contactNumberController.text,
+            "discount": discountPercent,
+            "discountAmount": discountAmount,
+            "netPayable": netPayable,
+            ...item,
+          },
+        )
         .toList();
 
     final success = await _invoiceService.submitInvoice(payload);
     if (success) {
       ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(content: Text('Invoice created'), backgroundColor: Colors.green),
+        const SnackBar(
+          content: Text('Invoice created'),
+          backgroundColor: Colors.green,
+        ),
       );
       _clearForm();
     } else {
       ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(content: Text('Failed to create invoice'), backgroundColor: Colors.red),
+        const SnackBar(
+          content: Text('Failed to create invoice'),
+          backgroundColor: Colors.red,
+        ),
       );
     }
   }
@@ -118,7 +123,11 @@ class _CreateInvoiceScreenState extends State<CreateInvoiceScreen> {
           children: [
             _sectionTitle("Customer Info"),
             _buildTextField(_customerNameController, "Customer Name"),
-            _buildTextField(_contactNumberController, "Phone Number", keyboardType: TextInputType.phone),
+            _buildTextField(
+              _contactNumberController,
+              "Phone Number",
+              keyboardType: TextInputType.phone,
+            ),
             const SizedBox(height: 20),
             _sectionTitle("Medicine List"),
             MedicineItemForm(onAdd: _addInvoiceItem),
@@ -142,7 +151,13 @@ class _CreateInvoiceScreenState extends State<CreateInvoiceScreen> {
             }),
             const SizedBox(height: 20),
             _sectionTitle("Summary"),
-            _buildTextField(_discountController, "Discount %", keyboardType: const TextInputType.numberWithOptions(decimal: true)),
+            _buildTextField(
+              _discountController,
+              "Discount %",
+              keyboardType: const TextInputType.numberWithOptions(
+                decimal: true,
+              ),
+            ),
             const SizedBox(height: 10),
             _summaryRow("Total Amount", totalAmount),
             _summaryRow("Discount Amount", discountAmount),
@@ -166,13 +181,19 @@ class _CreateInvoiceScreenState extends State<CreateInvoiceScreen> {
                   },
                   icon: const Icon(Icons.visibility),
                   label: const Text('Preview'),
-                  style: ElevatedButton.styleFrom(backgroundColor: Colors.blueGrey, foregroundColor: Colors.white),
+                  style: ElevatedButton.styleFrom(
+                    backgroundColor: Colors.blueGrey,
+                    foregroundColor: Colors.white,
+                  ),
                 ),
                 ElevatedButton.icon(
                   onPressed: _submitInvoice,
                   icon: const Icon(Icons.save),
                   label: const Text('Submit Invoice'),
-                  style: ElevatedButton.styleFrom(backgroundColor: Colors.teal, foregroundColor: Colors.white),
+                  style: ElevatedButton.styleFrom(
+                    backgroundColor: Colors.teal,
+                    foregroundColor: Colors.white,
+                  ),
                 ),
               ],
             ),
@@ -184,10 +205,17 @@ class _CreateInvoiceScreenState extends State<CreateInvoiceScreen> {
 
   Widget _sectionTitle(String text) => Padding(
     padding: const EdgeInsets.symmetric(vertical: 8),
-    child: Text(text, style: const TextStyle(fontSize: 18, fontWeight: FontWeight.bold)),
+    child: Text(
+      text,
+      style: const TextStyle(fontSize: 18, fontWeight: FontWeight.bold),
+    ),
   );
 
-  Widget _buildTextField(TextEditingController controller, String label, {TextInputType keyboardType = TextInputType.text}) {
+  Widget _buildTextField(
+    TextEditingController controller,
+    String label, {
+    TextInputType keyboardType = TextInputType.text,
+  }) {
     return Padding(
       padding: const EdgeInsets.symmetric(vertical: 6),
       child: TextField(
@@ -209,8 +237,20 @@ class _CreateInvoiceScreenState extends State<CreateInvoiceScreen> {
       child: Row(
         mainAxisAlignment: MainAxisAlignment.spaceBetween,
         children: [
-          Text(label, style: TextStyle(fontSize: 16, fontWeight: bold ? FontWeight.bold : FontWeight.normal)),
-          Text(value.toStringAsFixed(2), style: TextStyle(fontSize: 16, fontWeight: bold ? FontWeight.bold : FontWeight.normal)),
+          Text(
+            label,
+            style: TextStyle(
+              fontSize: 16,
+              fontWeight: bold ? FontWeight.bold : FontWeight.normal,
+            ),
+          ),
+          Text(
+            value.toStringAsFixed(2),
+            style: TextStyle(
+              fontSize: 16,
+              fontWeight: bold ? FontWeight.bold : FontWeight.normal,
+            ),
+          ),
         ],
       ),
     );
@@ -253,7 +293,8 @@ class _MedicineItemFormState extends State<MedicineItemForm> {
           onSuggestionSelected: (Inventory suggestion) {
             setState(() {
               selectedInventory = suggestion;
-              _searchController.text = '${suggestion.itemName} (${suggestion.category})';
+              _searchController.text =
+                  '${suggestion.itemName} (${suggestion.category})';
             });
           },
         ),
@@ -264,7 +305,8 @@ class _MedicineItemFormState extends State<MedicineItemForm> {
             const SizedBox(width: 8),
             ElevatedButton(
               onPressed: () {
-                if (selectedInventory != null && _quantityController.text.isNotEmpty) {
+                if (selectedInventory != null &&
+                    _quantityController.text.isNotEmpty) {
                   widget.onAdd(selectedInventory!, _quantityController.text);
                   _quantityController.clear();
                   _searchController.clear();

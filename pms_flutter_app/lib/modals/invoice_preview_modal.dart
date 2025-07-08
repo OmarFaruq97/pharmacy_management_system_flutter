@@ -24,15 +24,15 @@ class InvoicePreviewModal extends StatelessWidget {
   });
 
   static void show(
-      BuildContext context, {
-        required String customerName,
-        required String contactNumber,
-        required List<Map<String, dynamic>> items,
-        required double totalAmount,
-        required double discount,
-        required double discountAmount,
-        required double netPayable,
-      }) {
+    BuildContext context, {
+    required String customerName,
+    required String contactNumber,
+    required List<Map<String, dynamic>> items,
+    required double totalAmount,
+    required double discount,
+    required double discountAmount,
+    required double netPayable,
+  }) {
     showModalBottomSheet(
       context: context,
       isScrollControlled: true,
@@ -77,14 +77,21 @@ class InvoicePreviewModal extends StatelessWidget {
             pw.Text("Phone: $contactNumber"),
             pw.SizedBox(height: 10),
             pw.Divider(),
-            pw.Text("Items:", style: pw.TextStyle(fontWeight: pw.FontWeight.bold)),
+            pw.Text(
+              "Items:",
+              style: pw.TextStyle(fontWeight: pw.FontWeight.bold),
+            ),
             ...items.map((item) {
               return pw.Container(
                 margin: const pw.EdgeInsets.only(bottom: 4),
                 child: pw.Row(
                   mainAxisAlignment: pw.MainAxisAlignment.spaceBetween,
                   children: [
-                    pw.Expanded(child: pw.Text("${item['itemName']} (${item['category']})")),
+                    pw.Expanded(
+                      child: pw.Text(
+                        "${item['itemName']} (${item['category']})",
+                      ),
+                    ),
                     pw.Text("Qty: ${item['quantity']}"),
                     pw.Text("Unit: ${item['unitPrice']}"),
                     pw.Text("Sub: ${item['subTotal'].toStringAsFixed(2)}"),
@@ -110,8 +117,18 @@ class InvoicePreviewModal extends StatelessWidget {
     return pw.Row(
       mainAxisAlignment: pw.MainAxisAlignment.spaceBetween,
       children: [
-        pw.Text(label, style: pw.TextStyle(fontWeight: bold ? pw.FontWeight.bold : pw.FontWeight.normal)),
-        pw.Text(value.toStringAsFixed(2), style: pw.TextStyle(fontWeight: bold ? pw.FontWeight.bold : pw.FontWeight.normal)),
+        pw.Text(
+          label,
+          style: pw.TextStyle(
+            fontWeight: bold ? pw.FontWeight.bold : pw.FontWeight.normal,
+          ),
+        ),
+        pw.Text(
+          value.toStringAsFixed(2),
+          style: pw.TextStyle(
+            fontWeight: bold ? pw.FontWeight.bold : pw.FontWeight.normal,
+          ),
+        ),
       ],
     );
   }
@@ -127,7 +144,10 @@ class InvoicePreviewModal extends StatelessWidget {
           Row(
             mainAxisAlignment: MainAxisAlignment.spaceBetween,
             children: [
-              const Text("Invoice Preview", style: TextStyle(fontSize: 20, fontWeight: FontWeight.bold)),
+              const Text(
+                "Invoice Preview",
+                style: TextStyle(fontSize: 20, fontWeight: FontWeight.bold),
+              ),
               Text(now, style: const TextStyle(fontSize: 12)),
             ],
           ),
@@ -137,11 +157,17 @@ class InvoicePreviewModal extends StatelessWidget {
           const SizedBox(height: 10),
           const Divider(),
           const Text("Items:", style: TextStyle(fontWeight: FontWeight.bold)),
-          ...items.map((item) => ListTile(
-            title: Text('${item['itemName']} (${item['category']})'),
-            subtitle: Text('Qty: ${item['quantity']} | Unit: ${item['unitPrice']}'),
-            trailing: Text('Subtotal: ${item['subTotal'].toStringAsFixed(2)}'),
-          )),
+          ...items.map(
+            (item) => ListTile(
+              title: Text('${item['itemName']} (${item['category']})'),
+              subtitle: Text(
+                'Qty: ${item['quantity']} | Unit: ${item['unitPrice']}',
+              ),
+              trailing: Text(
+                'Subtotal: ${item['subTotal'].toStringAsFixed(2)}',
+              ),
+            ),
+          ),
           const Divider(),
           const SizedBox(height: 10),
           _summaryRow("Total Amount", totalAmount),
@@ -159,7 +185,7 @@ class InvoicePreviewModal extends StatelessWidget {
                 foregroundColor: Colors.white,
               ),
             ),
-          )
+          ),
         ],
       ),
     );

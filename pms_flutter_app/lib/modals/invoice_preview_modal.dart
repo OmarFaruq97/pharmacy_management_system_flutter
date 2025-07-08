@@ -1,124 +1,5 @@
-// import 'package:flutter/material.dart';
-//
-// class InvoicePreviewModal extends StatelessWidget {
-//   final String customerName;
-//   final String contactNumber;
-//   final List<Map<String, dynamic>> items;
-//   final double totalAmount;
-//   final double discount;
-//   final double discountAmount;
-//   final double netPayable;
-//
-//   const InvoicePreviewModal({
-//     super.key,
-//     required this.customerName,
-//     required this.contactNumber,
-//     required this.items,
-//     required this.totalAmount,
-//     required this.discount,
-//     required this.discountAmount,
-//     required this.netPayable,
-//   });
-//
-//   static void show(
-//     BuildContext context, {
-//     required String customerName,
-//     required String contactNumber,
-//     required List<Map<String, dynamic>> items,
-//     required double totalAmount,
-//     required double discount,
-//     required double discountAmount,
-//     required double netPayable,
-//   }) {
-//     showModalBottomSheet(
-//       context: context,
-//       isScrollControlled: true,
-//       builder: (_) => Padding(
-//         padding: const EdgeInsets.only(
-//           top: 16,
-//           left: 16,
-//           right: 16,
-//           bottom: 32,
-//         ),
-//         child: InvoicePreviewModal(
-//           customerName: customerName,
-//           contactNumber: contactNumber,
-//           items: items,
-//           totalAmount: totalAmount,
-//           discount: discount,
-//           discountAmount: discountAmount,
-//           netPayable: netPayable,
-//         ),
-//       ),
-//     );
-//   }
-//
-//   @override
-//   Widget build(BuildContext context) {
-//     return SingleChildScrollView(
-//       child: Column(
-//         crossAxisAlignment: CrossAxisAlignment.start,
-//         children: [
-//           const Text(
-//             "Invoice Preview",
-//             style: TextStyle(fontSize: 20, fontWeight: FontWeight.bold),
-//           ),
-//           const SizedBox(height: 10),
-//           Text("Customer: $customerName"),
-//           Text("Phone: $contactNumber"),
-//           const SizedBox(height: 10),
-//           const Divider(),
-//           const Text("Items:", style: TextStyle(fontWeight: FontWeight.bold)),
-//           ...items.map(
-//             (item) => ListTile(
-//               title: Text('${item['itemName']} (${item['category']})'),
-//               subtitle: Text(
-//                 'Qty: ${item['quantity']} | Unit: ${item['unitPrice']}',
-//               ),
-//               trailing: Text(
-//                 'Subtotal: ${item['subTotal'].toStringAsFixed(2)}',
-//               ),
-//             ),
-//           ),
-//           const Divider(),
-//           const SizedBox(height: 10),
-//           _summaryRow("Total Amount", totalAmount),
-//           _summaryRow("Discount (%)", discount),
-//           _summaryRow("Discount Amount", discountAmount),
-//           _summaryRow("Net Payable", netPayable, bold: true),
-//         ],
-//       ),
-//     );
-//   }
-//
-//   Widget _summaryRow(String label, double value, {bool bold = false}) {
-//     return Padding(
-//       padding: const EdgeInsets.symmetric(vertical: 2),
-//       child: Row(
-//         mainAxisAlignment: MainAxisAlignment.spaceBetween,
-//         children: [
-//           Text(
-//             label,
-//             style: TextStyle(
-//               fontSize: 16,
-//               fontWeight: bold ? FontWeight.bold : FontWeight.normal,
-//             ),
-//           ),
-//           Text(
-//             value.toStringAsFixed(2),
-//             style: TextStyle(
-//               fontSize: 16,
-//               fontWeight: bold ? FontWeight.bold : FontWeight.normal,
-//             ),
-//           ),
-//         ],
-//       ),
-//     );
-//   }
-// }
-
-
 import 'package:flutter/material.dart';
+import 'package:intl/intl.dart';
 import 'package:pdf/widgets.dart' as pw;
 import 'package:printing/printing.dart';
 
@@ -177,13 +58,20 @@ class InvoicePreviewModal extends StatelessWidget {
 
   Future<void> _printPdf(BuildContext context) async {
     final pdf = pw.Document();
+    final now = DateFormat('yyyy-MM-dd – kk:mm').format(DateTime.now());
 
     pdf.addPage(
       pw.Page(
         build: (pw.Context context) => pw.Column(
           crossAxisAlignment: pw.CrossAxisAlignment.start,
           children: [
-            pw.Text("Invoice", style: pw.TextStyle(fontSize: 24)),
+            pw.Row(
+              mainAxisAlignment: pw.MainAxisAlignment.spaceBetween,
+              children: [
+                pw.Text("Invoice", style: pw.TextStyle(fontSize: 24)),
+                pw.Text("Date: $now", style: pw.TextStyle(fontSize: 12)),
+              ],
+            ),
             pw.SizedBox(height: 10),
             pw.Text("Customer: $customerName"),
             pw.Text("Phone: $contactNumber"),
@@ -196,7 +84,7 @@ class InvoicePreviewModal extends StatelessWidget {
                 child: pw.Row(
                   mainAxisAlignment: pw.MainAxisAlignment.spaceBetween,
                   children: [
-                    pw.Text("${item['itemName']} (${item['category']})"),
+                    pw.Expanded(child: pw.Text("${item['itemName']} (${item['category']})")),
                     pw.Text("Qty: ${item['quantity']}"),
                     pw.Text("Unit: ${item['unitPrice']}"),
                     pw.Text("Sub: ${item['subTotal'].toStringAsFixed(2)}"),
@@ -230,11 +118,19 @@ class InvoicePreviewModal extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final now = DateFormat('yyyy-MM-dd – kk:mm').format(DateTime.now());
+
     return SingleChildScrollView(
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          const Text("Invoice Preview", style: TextStyle(fontSize: 20, fontWeight: FontWeight.bold)),
+          Row(
+            mainAxisAlignment: MainAxisAlignment.spaceBetween,
+            children: [
+              const Text("Invoice Preview", style: TextStyle(fontSize: 20, fontWeight: FontWeight.bold)),
+              Text(now, style: const TextStyle(fontSize: 12)),
+            ],
+          ),
           const SizedBox(height: 10),
           Text("Customer: $customerName"),
           Text("Phone: $contactNumber"),

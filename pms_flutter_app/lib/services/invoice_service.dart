@@ -3,8 +3,8 @@ import 'package:http/http.dart' as http;
 import '../model/inventory.dart';
 
 class InvoiceService {
-  // static const String baseUrl = 'http://192.168.0.186:8080/api';
-  static const String baseUrl = 'http://192.168.0.197:8080/api';
+   static const String baseUrl = 'http://192.168.0.186:8080/api';
+  //static const String baseUrl = 'http://192.168.0.197:8080/api';
 
   Future<List<Inventory>> searchMedicines(String query) async {
     final response = await http.get(

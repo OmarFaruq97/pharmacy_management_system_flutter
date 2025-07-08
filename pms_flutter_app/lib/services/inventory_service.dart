@@ -3,8 +3,8 @@ import 'package:http/http.dart' as http;
 import '../model/inventory.dart';
 
 class InventoryService {
-  // static const String _baseUrl = "http://192.168.0.186:8080/api/inventory";
-  static const String _baseUrl = "http://192.168.0.197:8080/api/inventory";
+   static const String _baseUrl = "http://192.168.0.186:8080/api/inventory";
+  //static const String _baseUrl = "http://192.168.0.197:8080/api/inventory";
 
   Future<List<Inventory>> fetchAllMedicines() async {
     final response = await http.get(Uri.parse("$_baseUrl/all"));

@@ -56,8 +56,6 @@ public class SecurityConfig {
 
                         .anyRequest().authenticated()
                 )
-
-
                 // Add our custom JWT filter before Spring's username/password filter
                 .addFilterBefore(jwtAuthenticationFilter, UsernamePasswordAuthenticationFilter.class)
 

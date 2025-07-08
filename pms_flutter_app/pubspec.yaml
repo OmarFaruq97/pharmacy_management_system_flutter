@@ -20,6 +20,7 @@ dependencies:
   flutter_typeahead: ^4.3.7
   printing: ^5.14.2
   pdf: ^3.11.3
+  fluttertoast: ^8.2.12
 
 
 dev_dependencies:
